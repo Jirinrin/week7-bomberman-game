@@ -28,6 +28,8 @@ const joinGameSuccess = () => ({
 })
 
 
+
+
 export const getGames = () => (dispatch, getState) => {
   const state = getState()
   if (!state.currentUser) return null
@@ -78,6 +80,20 @@ export const updateGame = (gameId, board) => (dispatch, getState) => {
     .patch(`${baseUrl}/games/${gameId}`)
     .set('Authorization', `Bearer ${jwt}`)
     .send({ board })
+    .then(_ => dispatch(updateGameSuccess()))
+    .catch(err => console.error(err))
+}
+
+export const updateCurrentPlayerPosition = (gameId, position) => (dispatch, getState) => {
+  const state = getState()
+  const jwt = state.currentUser.jwt
+
+  if (isExpired(jwt)) return dispatch(logout())
+
+  request
+    .patch(`${baseUrl}/games/${gameId}/players`)
+    .set('Authorization', `Bearer ${jwt}`)
+    .send({ position })
     .then(_ => dispatch(updateGameSuccess()))
     .catch(err => console.error(err))
 }

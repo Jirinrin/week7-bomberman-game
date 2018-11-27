@@ -2,17 +2,35 @@ import { BaseEntity, PrimaryGeneratedColumn, Column, Entity, Index, OneToMany, M
 import User from '../users/entity';
 
 export type PlayerSymbol = 'x' | 'o';
-export type Symbol = PlayerSymbol | 'Q';
+export type Symbol = PlayerSymbol | 'Q' | '▩';
 export type Row = (Symbol | null)[];
 export type Board = Row[];
 export type Position = [ number, number ];
 
 type Status = 'pending' | 'started' | 'finished';
 
-const BOARD_SIZE = [17, 15];
+// const BOARD_SIZE = [17, 15];
 
-const emptyRow: Row = Array(BOARD_SIZE[0]).fill(null);
-const emptyBoard: Board = Array(BOARD_SIZE[1]).fill(emptyRow);
+// const emptyRow: Row = Array(BOARD_SIZE[0]).fill(null);
+// const emptyBoard: Board = Array(BOARD_SIZE[1]).fill(emptyRow);
+
+const emptyBoard2 = [
+  [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+  [null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null],
+  [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+  [null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null],
+  [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+  [null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null],
+  [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+  [null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null],
+  [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+  [null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null],
+  [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+  [null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null],
+  [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+  [null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null],
+  [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+]
 
 @Entity()
 export class Game extends BaseEntity {
@@ -20,7 +38,7 @@ export class Game extends BaseEntity {
   @PrimaryGeneratedColumn()
   id?: number
 
-  @Column('json', {default: emptyBoard})
+  @Column('json', {default: emptyBoard2})
   board: Board
 
   @Column('char', {length:1, nullable: true})

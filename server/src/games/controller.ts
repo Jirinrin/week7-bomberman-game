@@ -4,15 +4,15 @@ import {
 } from 'routing-controllers';
 import User from '../users/entity';
 import { Game, Player, Board } from './entities';
-import {IsBoard, isValidTransition, calculateWinner, finished} from './logic';
-import { Validate } from 'class-validator';
+import {isValidMove} from './logic';
+// import { Validate } from 'class-validator';
 import {io} from '../index';
 
 class GameUpdate {
 
-  @Validate(IsBoard, {
-    message: 'Not a valid board'
-  })
+  // @Validate(IsBoard, {
+  //   message: 'Not a valid board'
+  // })
   board: Board;
 }
 
@@ -62,7 +62,7 @@ export default class GameController {
     const player = await Player.create({
       game, 
       user,
-      /// en dit dus ook weer anders
+      /// moet ook beter
       symbol: 'o',
       position: [10, 10]
     }).save();
@@ -92,18 +92,15 @@ export default class GameController {
 
     if (!player) throw new ForbiddenError(`You are not part of this game`);
     if (game.status !== 'started') throw new BadRequestError(`The game is not started yet`);
-    if (!isValidTransition(player.symbol, game.board, update.board)) {
-      throw new BadRequestError(`Invalid move`);
-    }
 
-    const winner = calculateWinner(update.board);
-    if (winner) {
-      game.winner = winner;
-      game.status = 'finished';
-    }
-    else if (finished(update.board)) {
-      game.status = 'finished';
-    }
+    // const winner = calculateWinner(update.board);
+    // if (winner) {
+    //   game.winner = winner;
+    //   game.status = 'finished';
+    // }
+    // else if (finished(update.board)) {
+    //   game.status = 'finished';
+    // }
     game.board = update.board;
     await game.save();
     
@@ -113,6 +110,45 @@ export default class GameController {
     });
 
     return game;
+  }
+
+  @Authorized()
+  // the reason that we're using patch here is because this request is not idempotent
+  // http://restcookbook.com/HTTP%20Methods/idempotency/
+  // try to fire the same requests twice, see what happens
+  @Patch('/games/:id([0-9]+)/players')
+  async updatePlayer(
+    @CurrentUser() user: User,
+    @Param('id') gameId: number,
+    @Body() {position}: any
+  ) {
+    const game = await Game.findOneById(gameId);
+    if (!game) throw new NotFoundError(`Game does not exist`);
+
+    const player = await Player.findOne({ user, game });
+
+    if (!isValidMove(position, game.board)) return player;
+
+    if (!player) throw new ForbiddenError(`You are not part of this game`);
+    if (game.status !== 'started') throw new BadRequestError(`The game is not started yet`);
+
+    player.position = position;
+    await player.save();
+
+    const updateId: number = player.id || 0;
+    const newPlayers = game.players.map((pl) => pl.id === updateId ? player : pl );
+
+    await game.save();
+    
+    io.emit('action', {
+      type: 'UPDATE_GAME',
+      payload: {
+        ...game,
+        players: newPlayers
+      }
+    });
+
+    return player;
   }
 
   @Authorized()

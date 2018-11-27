@@ -1,7 +1,7 @@
 import React, {PureComponent} from 'react';
 import {connect} from 'react-redux';
 import {Redirect} from 'react-router-dom';
-import {getGames, joinGame, updateGame} from '../../actions/games';
+import {getGames, joinGame, updateGame, updateCurrentPlayerPosition} from '../../actions/games';
 import {getUsers} from '../../actions/users';
 import {userId} from '../../jwt';
 import Paper from 'material-ui/Paper';
@@ -19,16 +19,24 @@ class GameDetails extends PureComponent {
 
   joinGame = () => this.props.joinGame(this.props.game.id);
 
-  makeMove = (toRow, toCell) => {
-    const {game, updateGame} = this.props;
-
-    const board = game.board.map(
-      (row, rowIndex) => row.map((cell, cellIndex) => {
-        if (rowIndex === toRow && cellIndex === toCell) return game.turn;
-        else return cell;
-      })
-    );
-    updateGame(game.id, board);
+  arrowMove = (key) => {
+    const {currentPlayerPosition, game} = this.props
+    if(key === 'right') {
+      console.log('move to right')
+      this.props.updateCurrentPlayerPosition(game.id, [currentPlayerPosition[0], currentPlayerPosition[1] + 1 ]) 
+    }
+    if(key === 'left') {
+      console.log('move to left')
+      this.props.updateCurrentPlayerPosition(game.id, [currentPlayerPosition[0], currentPlayerPosition[1] - 1 ]) 
+    }
+    if(key === 'up') {
+      console.log('move up')
+      this.props.updateCurrentPlayerPosition(game.id, [currentPlayerPosition[0]- 1, currentPlayerPosition[1]]) 
+    }
+    if(key === 'down') {
+      console.log('move to down')
+      this.props.updateCurrentPlayerPosition(game.id, [currentPlayerPosition[0] + 1, currentPlayerPosition[1]]) 
+    }
   }
 
 
@@ -58,12 +66,6 @@ class GameDetails extends PureComponent {
       <p>Status: {game.status}</p>
 
       {
-        game.status === 'started' &&
-        player && player.symbol === game.turn &&
-        <div>It's your turn!</div>
-      }
-
-      {
         game.status === 'pending' &&
         game.players.map(p => p.userId).indexOf(userId) === -1 &&
         <button onClick={this.joinGame}>Join Game</button>
@@ -78,7 +80,7 @@ class GameDetails extends PureComponent {
 
       {
         game.status !== 'pending' &&
-        <Board board={formattedBoard} makeMove={this.makeMove} />
+        <Board board={formattedBoard} arrowMove={this.arrowMove}/>
       }
     </Paper>)
   }
@@ -89,11 +91,12 @@ const mapStateToProps = (state, props) => ({
   userId: state.currentUser && userId(state.currentUser.jwt),
   game: state.games && state.games[props.match.params.id],
   users: state.users,
-  formattedBoard: formatBoard(state.games ? state.games[props.match.params.id] : null)
+  formattedBoard: formatBoard(state.games ? state.games[props.match.params.id] : null),
+  currentPlayerPosition: state.games && state.currentUser && state.games[props.match.params.id].status !== 'pending' && state.games[props.match.params.id].players.find(player => player.userId === userId(state.currentUser.jwt)).position
 });
 
 const mapDispatchToProps = {
-  getGames, getUsers, joinGame, updateGame
+  getGames, getUsers, joinGame, updateGame, updateCurrentPlayerPosition
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(GameDetails);
@@ -101,6 +104,6 @@ export default connect(mapStateToProps, mapDispatchToProps)(GameDetails);
 function formatBoard(game) {
   if (game === null) return null;
   let formattedBoard = game.board;
-  game.players.forEach(player => formattedBoard[player.position[1]][player.position[0]] = player.symbol);
+  game.players.forEach(player => formattedBoard[player.position[0]][player.position[1]] = player.symbol);
   return formattedBoard;
 }
