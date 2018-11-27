@@ -21,7 +21,7 @@
     "rootDir": "src/"
   },
   "include": [
-      "src/**/*"
+      "src/**/*", "../client/src/reducers/players.js", "../client/src/reducers/playerPositions.js"
   ],
   "exclude": [
       "node_modules",
