@@ -3,10 +3,12 @@ import {
   Body, Patch 
 } from 'routing-controllers';
 import User from '../users/entity';
-import { Game, Player, Board } from './entities';
+import { Game, Player, Board, Bomb } from './entities';
 import {isValidMove} from './logic';
 // import { Validate } from 'class-validator';
 import {io} from '../index';
+
+const BOMB_FUSE = 5000;
 
 class GameUpdate {
 
@@ -14,6 +16,12 @@ class GameUpdate {
   //   message: 'Not a valid board'
   // })
   board: Board;
+}
+
+function sleep(ms) {
+  return new Promise(function(resolve) { 
+    setTimeout(resolve, ms)
+  });
 }
 
 @JsonController()
@@ -28,7 +36,7 @@ export default class GameController {
     const entity = await Game.create().save();
 
     await Player.create({
-      game: entity, 
+      game: entity,
       user,
       symbol: 'x',
       position: [0, 0]
@@ -127,7 +135,7 @@ export default class GameController {
 
     const player = await Player.findOne({ user, game });
 
-    if (!isValidMove(position, game.board)) return player;
+    if (!isValidMove(position, game)) return player;
 
     if (!player) throw new ForbiddenError(`You are not part of this game`);
     if (game.status !== 'started') throw new BadRequestError(`The game is not started yet`);
@@ -150,6 +158,46 @@ export default class GameController {
 
     return player;
   }
+
+  @Authorized()
+  @Post('/games/:id([0-9]+)/bombs')
+  async placeBomb(
+    @Param('id') gameId: number,
+    @Body() {position}: any
+  ) {
+    const game = await Game.findOneById(gameId);
+    if (!game) throw new NotFoundError(`Game does not exist`);
+
+
+    const newBomb: Bomb = await Bomb.create({
+      game,
+      position
+    }).save();
+
+    io.emit('action', {
+      type: 'UPDATE_GAME',
+      payload: {
+        ...game,
+        activeBombs: [
+          ...game.activeBombs,
+          newBomb
+        ]
+      }
+    });
+
+    await sleep(BOMB_FUSE);
+    await newBomb.remove();
+
+    const updatedGame = await Game.findOneById(gameId);
+
+    io.emit('action', {
+      type: 'UPDATE_GAME',
+      payload: updatedGame
+     });
+
+    return newBomb;
+  }
+
 
   @Authorized()
   @Get('/games/:id([0-9]+)')

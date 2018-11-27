@@ -1,12 +1,17 @@
 // import { ValidatorConstraint, ValidatorConstraintInterface } from 'class-validator'
-import { Board, Position } from './entities'
+import { Position, Game } from './entities'
 
-export const isValidMove = (newPosition: Position, board: Board): boolean => {
-  if (newPosition[0] > board.length-1 || 
-      newPosition[1] > board[0].length-1 ||
+const OBSTACLES = ['▩', '□']
+
+export const isValidMove = (newPosition: Position, game: Game): boolean => {
+  console.log(game.activeBombs);
+  if (newPosition[0] > game.board.length-1 || 
+      newPosition[1] > game.board[0].length-1 ||
       newPosition[0] < 0 ||
       newPosition[1] < 0 ||
-      board[newPosition[0]][newPosition[1]] === '▩') {
+      (game.board[newPosition[0]][newPosition[1]] && OBSTACLES.includes(game.board[newPosition[0]][newPosition[1]]!)) ||
+      game.activeBombs.find(bomb => JSON.stringify(bomb.position) === JSON.stringify(newPosition))
+    ) {
     return false;
   }
   return true;

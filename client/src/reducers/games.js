@@ -17,7 +17,6 @@ export default (state = null, {type, payload}) => {
       }
 
     case UPDATE_GAME:
-      console.log(payload);
       return {
         ...state,
         [payload.id]: payload

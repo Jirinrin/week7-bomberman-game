@@ -25,6 +25,7 @@ export default ({board, arrowMove}) => (<div>
     <KeyboardEventHandler handleKeys={['down']} onKeyEvent={(key) => arrowMove(key)} /> 
     <KeyboardEventHandler handleKeys={['left']} onKeyEvent={(key) => arrowMove(key)} /> 
     <KeyboardEventHandler handleKeys={['up']} onKeyEvent={(key) => arrowMove(key)} /> 
+    <KeyboardEventHandler handleKeys={['z']} onKeyEvent={(key) => arrowMove(key)} /> 
 
   {board.map((cells, rowIndex) => 
     <div key={rowIndex}>

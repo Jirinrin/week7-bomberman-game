@@ -2,7 +2,7 @@ import { BaseEntity, PrimaryGeneratedColumn, Column, Entity, Index, OneToMany, M
 import User from '../users/entity';
 
 export type PlayerSymbol = 'x' | 'o';
-export type Symbol = PlayerSymbol | 'Q' | '▩';
+export type Symbol = PlayerSymbol | 'Q' | '▩' | '□' | '💣';
 export type Row = (Symbol | null)[];
 export type Board = Row[];
 export type Position = [ number, number ];
@@ -51,6 +51,9 @@ export class Game extends BaseEntity {
   // http://typeorm.io/#/many-to-one-one-to-many-relations
   @OneToMany(_ => Player, player => player.game, {eager:true})
   players: Player[]
+
+  @OneToMany(_ => Bomb, bomb => bomb.game, {eager:true})
+  activeBombs: Bomb[]
 }
 
 @Entity()
@@ -71,6 +74,19 @@ export class Player extends BaseEntity {
 
   @Column('char', {length: 1})
   symbol: PlayerSymbol
+
+  @Column('json', {default: [0,0]})
+  position: Position
+}
+
+@Entity()
+export class Bomb extends BaseEntity {
+
+  @PrimaryGeneratedColumn()
+  id?: number
+
+  @ManyToOne(_ => Game, game => game.activeBombs)
+  game: Game 
 
   @Column('json', {default: [0,0]})
   position: Position

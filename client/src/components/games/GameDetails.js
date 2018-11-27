@@ -1,7 +1,7 @@
 import React, {PureComponent} from 'react';
 import {connect} from 'react-redux';
 import {Redirect} from 'react-router-dom';
-import {getGames, joinGame, updateGame, updateCurrentPlayerPosition} from '../../actions/games';
+import {getGames, joinGame, updateGame, placeBomb, updateCurrentPlayerPosition} from '../../actions/games';
 import {getUsers} from '../../actions/users';
 import {userId} from '../../jwt';
 import Paper from 'material-ui/Paper';
@@ -36,6 +36,10 @@ class GameDetails extends PureComponent {
     if(key === 'down') {
       console.log('move to down')
       this.props.updateCurrentPlayerPosition(game.id, [currentPlayerPosition[0] + 1, currentPlayerPosition[1]]) 
+    }
+    if(key === 'z') {
+      console.log('Place bomb')
+      this.props.placeBomb(game.id, currentPlayerPosition) 
     }
   }
 
@@ -96,7 +100,7 @@ const mapStateToProps = (state, props) => ({
 });
 
 const mapDispatchToProps = {
-  getGames, getUsers, joinGame, updateGame, updateCurrentPlayerPosition
+  getGames, getUsers, joinGame, updateGame, updateCurrentPlayerPosition, placeBomb
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(GameDetails);
@@ -104,6 +108,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(GameDetails);
 function formatBoard(game) {
   if (game === null) return null;
   let formattedBoard = game.board;
+  if (game.activeBombs[0]) game.activeBombs.forEach(bomb => formattedBoard[bomb.position[0]][bomb.position[1]] = '💣');
   game.players.forEach(player => formattedBoard[player.position[0]][player.position[1]] = player.symbol);
   return formattedBoard;
 }
