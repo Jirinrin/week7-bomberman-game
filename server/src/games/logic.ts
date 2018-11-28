@@ -1,7 +1,9 @@
 // import { ValidatorConstraint, ValidatorConstraintInterface } from 'class-validator'
 import { Position, Game, ExplosionPos, Player } from './entities'
 
-const OBSTACLES = ['▩', '□', '▣']
+const DESTRUCTABLE = ['□'];
+const STURDY = ['▩', '▣'];
+const OBSTACLES = [...DESTRUCTABLE, ...STURDY];
 const EXPLOSION_SIZE = 3;
 
 export const isValidMove = (newPosition: Position, game: Game): boolean => {
@@ -38,17 +40,25 @@ export const calculateExpLine = (startPoint: Position, game: Game, step: 1|-1, d
   switch (direction) {
     case '-':
       for (let i = 0; i < size; i++) {
-        if (game.board[startPoint[0]][startPoint[1]+(step*(i+1))] && OBSTACLES.includes(game.board[startPoint[0]][startPoint[1]+(step*(i+1))]!)) {
+        if (game.board[startPoint[0]][startPoint[1]+(step*(i+1))] && STURDY.includes(game.board[startPoint[0]][startPoint[1]+(step*(i+1))]!)) {
+          break;
+        }
+        else if ((game.board[startPoint[0]][startPoint[1]+(step*(i+1))] && DESTRUCTABLE.includes(game.board[startPoint[0]][startPoint[1]+(step*(i+1))]!))) {
+          newLine.push([startPoint[0], startPoint[1]+(step*(i+1))]);
           break;
         }
         else {
-          newLine.push([startPoint[0], startPoint[1]+(step*(i+1))]);  
+          newLine.push([startPoint[0], startPoint[1]+(step*(i+1))]);
         }
       }
       break;
     case '|':
       for (let i = 0; i < size; i++) {
-        if (game.board[startPoint[0]+(step*(i+1))][startPoint[1]] && OBSTACLES.includes(game.board[startPoint[0]+(step*(i+1))][startPoint[1]]!)) {
+        if (game.board[startPoint[0]+(step*(i+1))][startPoint[1]] && STURDY.includes(game.board[startPoint[0]+(step*(i+1))][startPoint[1]]!)) {
+          break;
+        }
+        else if ((game.board[startPoint[0]][startPoint[1]+(step*(i+1))] && DESTRUCTABLE.includes(game.board[startPoint[0]][startPoint[1]+(step*(i+1))]!))) {
+          newLine.push([startPoint[0]+(step*(i+1)), startPoint[1]]);
           break;
         }
         else {

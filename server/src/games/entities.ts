@@ -1,7 +1,8 @@
 import { BaseEntity, PrimaryGeneratedColumn, Column, Entity, Index, OneToMany, ManyToOne } from 'typeorm';
 import User from '../users/entity';
+import {defaultBoard} from './boards';
 
-export type PlayerSymbol = 'x' | 'o';
+export type PlayerSymbol = 'x' | 'o' | '☆' | 'ᗣ';
 export type Symbol = PlayerSymbol | 'Q' | '▩' | '□' | '▣' | '💣' | '-' | '|';
 export type Row = (Symbol | null)[];
 export type Board = Row[];
@@ -19,34 +20,7 @@ type Status = 'pending' | 'started' | 'finished';
 // const emptyRow: Row = Array(BOARD_SIZE[0]).fill(null);
 // const emptyBoard: Board = Array(BOARD_SIZE[1]).fill(emptyRow);
 
-const emptyBoardPre: Board = [
-  [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-  [null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null],
-  [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-  [null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null],
-  [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-  [null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null],
-  [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-  [null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null],
-  [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-  [null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null],
-  [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-  [null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null],
-  [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-  [null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null],
-  [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-]
 
-function makeEdges(board: Board): Board {
-  const filledRow = Array(board[0].length+2).fill('▣');
-  let newBoard = [filledRow];
-  board.forEach((row: Row) => newBoard.push(['▣', ...row, '▣']));
-  newBoard.push(filledRow);
-
-  return newBoard;
-}
-
-const emptyBoard = makeEdges(emptyBoardPre);
 
 @Entity()
 export class Game extends BaseEntity {
@@ -54,7 +28,7 @@ export class Game extends BaseEntity {
   @PrimaryGeneratedColumn()
   id?: number
 
-  @Column('json', {default: emptyBoard})
+  @Column('json', {default: defaultBoard})
   board: Board
 
   @Column('char', {length:1, nullable: true})

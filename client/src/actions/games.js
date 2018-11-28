@@ -8,6 +8,7 @@ export const UPDATE_GAME = 'UPDATE_GAME';
 export const UPDATE_GAMES = 'UPDATE_GAMES';
 export const JOIN_GAME_SUCCESS = 'JOIN_GAME_SUCCESS';
 export const UPDATE_GAME_SUCCESS = 'UPDATE_GAME_SUCCESS';
+export const START_GAME_SUCCESS = 'START_GAME_SUCCESS';
 export const PLACE_BOMB_SUCCESS = 'PLACE_BOMB_SUCCESS';
 
 const updateGames = games => ({
@@ -26,6 +27,10 @@ const updateGameSuccess = () => ({
 
 const joinGameSuccess = () => ({
   type: JOIN_GAME_SUCCESS
+});
+
+const startGameSuccess = () => ({
+  type: START_GAME_SUCCESS
 });
 
 const placeBombSuccess = () => ({
@@ -59,6 +64,19 @@ export const joinGame = (gameId) => (dispatch, getState) => {
     .post(`${baseUrl}/games/${gameId}/players`)
     .set('Authorization', `Bearer ${jwt}`)
     .then(_ => dispatch(joinGameSuccess()))
+    .catch(err => console.error(err));
+}
+
+export const startGame = (gameId) => (dispatch, getState) => {
+  const state = getState();
+  const jwt = state.currentUser.jwt;
+
+  if (isExpired(jwt)) return dispatch(logout());
+
+  request
+    .patch(`${baseUrl}/games/${gameId}/start`)
+    .set('Authorization', `Bearer ${jwt}`)
+    .then(_ => dispatch(startGameSuccess()))
     .catch(err => console.error(err));
 }
 

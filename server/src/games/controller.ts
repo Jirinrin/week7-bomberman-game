@@ -7,6 +7,7 @@ import { Game, Player, Board, Bomb, Explosion } from './entities';
 import {isValidMove, calculateExplosion, playersAreDead, calculateWinner} from './logic';
 // import { Validate } from 'class-validator';
 import {io} from '../index';
+import { getBoard } from './boards';
 
 const BOMB_FUSE = 5000;
 const EXPLOSION_DURATION = 1000;
@@ -34,7 +35,10 @@ export default class GameController {
   async createGame(
     @CurrentUser() user: User
   ) {
-    const entity = await Game.create().save();
+    /// moet nog testen
+    const entity = await Game.create({
+      board: getBoard()
+    }).save();
 
     await Player.create({
       game: entity,
@@ -53,6 +57,7 @@ export default class GameController {
     return game;
   }
 
+
   @Authorized()
   @Post('/games/:id([0-9]+)/players')
   @HttpCode(201)
@@ -65,23 +70,64 @@ export default class GameController {
     /// moet dus (uiteindelijk) een aparte start game knop komen; dat game.status = 'started' moet dus niet direct gebeuren!
     if (game.status !== 'pending') throw new BadRequestError(`Game is already started`);
 
-    game.status = 'started';
-    await game.save();
 
-    const player = await Player.create({
-      game, 
-      user,
-      /// moet ook beter
-      symbol: 'o',
-      position: [15, 17]
-    }).save();
+    const player = Player.create({
+      game,
+      user
+    })
 
+    switch(game.players.length) {
+      case 1:
+        player.symbol = 'o';
+        player.position = [15, 17];
+        break;
+      case 2: 
+        player.symbol =  '☆';
+        player.position = [1, 17];
+        break;
+      case 3:
+        player.symbol = 'ᗣ';
+        player.position = [15, 1];
+        game.status = 'started';
+        await game.save();
+        break;
+      default:
+        throw new ForbiddenError(`Game is full`)
+    }
+    
+    await player.save();
+
+    /// Kan wss nog zonder findOnebyId
     io.emit('action', {
       type: 'UPDATE_GAME',
-      payload: await Game.findOneById(game.id)
+      payload: await Game.findOneById(gameId)
     });
 
     return player;
+  }
+
+
+
+  @Authorized()
+  @Patch('/games/:id([0-9]+)/start')
+  @HttpCode(200)
+  async startGame(
+    @Param('id') gameId: number
+  ) {
+    const game = await Game.findOneById(gameId);
+    if (!game) throw new BadRequestError(`Game does not exist`);
+
+    if (game.status !== 'pending') throw new BadRequestError(`Game is already started`);
+    game.status = 'started';
+    await game.save();
+
+    /// Kan wss nog zonder findOnebyId
+    io.emit('action', {
+      type: 'UPDATE_GAME',
+      payload: await Game.findOneById(gameId)
+    });
+
+    return game;
   }
 
   @Authorized()
@@ -191,8 +237,6 @@ export default class GameController {
       }
     });
 
-
-
     // Bomb explodes
 
     setTimeout(async () => {
@@ -204,17 +248,20 @@ export default class GameController {
         position: calculateExplosion(position, game)
       }).save();
       
-      let gameDuringExplosion: Game = {
-        ...updateAfterBomb,
-        activeExplosions: [
-          ...game.activeExplosions,
-          newExplosion
-        ]
-      } as Game;
-      
+      let gameDuringExplosion: Game = updateAfterBomb!;
+      gameDuringExplosion.activeExplosions = [ ...game.activeExplosions, newExplosion ];
+
       const gameAfterDeadPlayers = await checkForDeadPlayers(gameDuringExplosion, gameId);
       if (gameAfterDeadPlayers) gameDuringExplosion = gameAfterDeadPlayers;
+
+      Object.values(newExplosion.position).forEach(positions => {
+        positions.forEach(pos => {
+          gameDuringExplosion.board[pos[0]][pos[1]] = null;
+        });
+      });
       
+      await gameDuringExplosion.save();
+
       io.emit('action', {
         type: 'UPDATE_GAME',
         payload: gameDuringExplosion
@@ -258,7 +305,9 @@ async function checkForDeadPlayers(game: Game, gameId: number): Promise<Game|nul
   if (deadPlayers) {
     deadPlayers.forEach(async player => {
       player.dead = true;
-      gameCopy = { ...game, players: [...game.players, player] } as Game;
+      /// heb dit zomaar veranderd... kijken of werkt ofzo
+      gameCopy = game;
+      gameCopy.players = game.players.map(pl => pl === player ? player : pl);
       await player.save();
     });
 
