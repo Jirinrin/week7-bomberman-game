@@ -111,10 +111,7 @@ export default connect(mapStateToProps, mapDispatchToProps)(GameDetails);
 function formatBoard(game) {
   if (game === null) return null;
   let formattedBoard = game.board;
-  if (game.activeBombs[0]) {
-    game.activeBombs.forEach(bomb => formattedBoard[bomb.position[0]][bomb.position[1]] = '💣');
-  }
-  game.players.forEach(player => {if(!player.dead) formattedBoard[player.position[0]][player.position[1]] = player.symbol});
+  
   if (game.activeExplosions[0]) {
     game.activeExplosions.forEach(explosion => {
       explosion.position['+'].forEach(ex => formattedBoard[ex[0]][ex[1]] = '+')
@@ -122,5 +119,9 @@ function formatBoard(game) {
       explosion.position['|'].forEach(ex => formattedBoard[ex[0]][ex[1]] = '|')
     });
   }
+  if (game.activeBombs[0]) {
+    game.activeBombs.forEach(bomb => formattedBoard[bomb.position[0]][bomb.position[1]] = '💣');
+  }
+  game.players.forEach(player => {if(!player.dead) formattedBoard[player.position[0]][player.position[1]] = player.symbol});
   return formattedBoard;
 }

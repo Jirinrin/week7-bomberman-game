@@ -191,45 +191,47 @@ export default class GameController {
       }
     });
 
-    await sleep(BOMB_FUSE);
+
 
     // Bomb explodes
 
-    await newBomb.remove();
-    const updateAfterBomb = await Game.findOneById(gameId);
-
-    const newExplosion: Explosion = await Explosion.create({
-      game: updateAfterBomb,
-      position: calculateExplosion(position, game)
-    }).save();
-
-    let gameDuringExplosion: Game = {
-      ...updateAfterBomb,
-      activeExplosions: [
-        ...game.activeExplosions,
-        newExplosion
-      ]
-    } as Game;
-
-    const gameAfterDeadPlayers = await checkForDeadPlayers(gameDuringExplosion, gameId);
-    if (gameAfterDeadPlayers) gameDuringExplosion = gameAfterDeadPlayers;
-
-    io.emit('action', {
-      type: 'UPDATE_GAME',
-      payload: gameDuringExplosion
-    })
-
-    await sleep(EXPLOSION_DURATION);
-
-    // Explosion finished
-
-    await newExplosion.remove();
-    const updateAfterExplosion = await Game.findOneById(gameId);
-
-    io.emit('action', {
-      type: 'UPDATE_GAME',
-      payload: updateAfterExplosion
-     });
+    setTimeout(async () => {
+      await newBomb.remove();
+      const updateAfterBomb = await Game.findOneById(gameId);
+      
+      const newExplosion: Explosion = await Explosion.create({
+        game: updateAfterBomb,
+        position: calculateExplosion(position, game)
+      }).save();
+      
+      let gameDuringExplosion: Game = {
+        ...updateAfterBomb,
+        activeExplosions: [
+          ...game.activeExplosions,
+          newExplosion
+        ]
+      } as Game;
+      
+      const gameAfterDeadPlayers = await checkForDeadPlayers(gameDuringExplosion, gameId);
+      if (gameAfterDeadPlayers) gameDuringExplosion = gameAfterDeadPlayers;
+      
+      io.emit('action', {
+        type: 'UPDATE_GAME',
+        payload: gameDuringExplosion
+      })
+      
+      await sleep(EXPLOSION_DURATION);
+      
+      // Explosion finished
+      
+      await newExplosion.remove();
+      const updateAfterExplosion = await Game.findOneById(gameId);
+      
+      io.emit('action', {
+        type: 'UPDATE_GAME',
+        payload: updateAfterExplosion
+      });
+    }, BOMB_FUSE); 
 
     return newBomb;
   }
