@@ -5,8 +5,11 @@ const OBSTACLES = ['▩', '□', '▣']
 const EXPLOSION_SIZE = 3;
 
 export const isValidMove = (newPosition: Position, game: Game): boolean => {
+  console.log(newPosition);
+  console.log(game.players);
   if ((game.board[newPosition[0]][newPosition[1]] && OBSTACLES.includes(game.board[newPosition[0]][newPosition[1]]!)) ||
-      game.activeBombs.find(bomb => JSON.stringify(bomb.position) === JSON.stringify(newPosition))
+      game.activeBombs.find(bomb => JSON.stringify(bomb.position) === JSON.stringify(newPosition)) ||
+      game.players.find(player => JSON.stringify(player.position) === JSON.stringify(newPosition))
     ) {
     return false;
   }
