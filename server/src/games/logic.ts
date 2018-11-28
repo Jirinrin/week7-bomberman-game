@@ -57,7 +57,7 @@ export const calculateExpLine = (startPoint: Position, game: Game, step: 1|-1, d
         if (game.board[startPoint[0]+(step*(i+1))][startPoint[1]] && STURDY.includes(game.board[startPoint[0]+(step*(i+1))][startPoint[1]]!)) {
           break;
         }
-        else if ((game.board[startPoint[0]][startPoint[1]+(step*(i+1))] && DESTRUCTABLE.includes(game.board[startPoint[0]][startPoint[1]+(step*(i+1))]!))) {
+        else if ((game.board[startPoint[0]+(step*(i+1))][startPoint[1]] && DESTRUCTABLE.includes(game.board[startPoint[0]][startPoint[1]+(step*(i+1))]!))) {
           newLine.push([startPoint[0]+(step*(i+1)), startPoint[1]]);
           break;
         }
