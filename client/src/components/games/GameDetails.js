@@ -17,6 +17,10 @@ class GameDetails extends PureComponent {
     }
   }
 
+  componentDidUpdate() {
+    console.log(this.props.currentPlayer);
+  }
+
   joinGame = () => this.props.joinGame(this.props.game.id);
 
   arrowMove = (key) => {
@@ -44,12 +48,10 @@ class GameDetails extends PureComponent {
   }
 
 
-  
-
 
 
   render() {
-    const {game, formattedBoard, users, authenticated, userId} = this.props;
+    const {game, formattedBoard, users, authenticated, userId, currentPlayer} = this.props;
 
     if (!authenticated) return (
 			<Redirect to="/login" />
@@ -84,7 +86,7 @@ class GameDetails extends PureComponent {
 
       {
         game.status !== 'pending' &&
-        <Board board={formattedBoard} arrowMove={this.arrowMove}/>
+        <Board board={formattedBoard} arrowMove={this.arrowMove} dead={currentPlayer.dead}/>
       }
     </Paper>)
   }
@@ -95,7 +97,9 @@ const mapStateToProps = (state, props) => ({
   userId: state.currentUser && userId(state.currentUser.jwt),
   game: state.games && state.games[props.match.params.id],
   users: state.users,
+  currentPlayer: state.games && state.currentUser && state.games[props.match.params.id].status !== 'pending' && state.games[props.match.params.id].players.find(player => player.userId === userId(state.currentUser.jwt)),
   formattedBoard: formatBoard(state.games ? state.games[props.match.params.id] : null),
+  /// weghalen en beter ofzo
   currentPlayerPosition: state.games && state.currentUser && state.games[props.match.params.id].status !== 'pending' && state.games[props.match.params.id].players.find(player => player.userId === userId(state.currentUser.jwt)).position
 });
 
@@ -108,7 +112,16 @@ export default connect(mapStateToProps, mapDispatchToProps)(GameDetails);
 function formatBoard(game) {
   if (game === null) return null;
   let formattedBoard = game.board;
-  if (game.activeBombs[0]) game.activeBombs.forEach(bomb => formattedBoard[bomb.position[0]][bomb.position[1]] = '💣');
-  game.players.forEach(player => formattedBoard[player.position[0]][player.position[1]] = player.symbol);
+  if (game.activeBombs[0]) {
+    game.activeBombs.forEach(bomb => formattedBoard[bomb.position[0]][bomb.position[1]] = '💣');
+  }
+  game.players.forEach(player => {if(!player.dead) formattedBoard[player.position[0]][player.position[1]] = player.symbol});
+  if (game.activeExplosions[0]) {
+    game.activeExplosions.forEach(explosion => {
+      explosion.position['+'].forEach(ex => formattedBoard[ex[0]][ex[1]] = '+')
+      explosion.position['-'].forEach(ex => formattedBoard[ex[0]][ex[1]] = '—')
+      explosion.position['|'].forEach(ex => formattedBoard[ex[0]][ex[1]] = '|')
+    });
+  }
   return formattedBoard;
 }

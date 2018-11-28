@@ -1,15 +1,11 @@
 // import { ValidatorConstraint, ValidatorConstraintInterface } from 'class-validator'
-import { Position, Game } from './entities'
+import { Position, Game, ExplosionPos, Player } from './entities'
 
-const OBSTACLES = ['▩', '□']
+const OBSTACLES = ['▩', '□', '▣']
+const EXPLOSION_SIZE = 3;
 
 export const isValidMove = (newPosition: Position, game: Game): boolean => {
-  console.log(game.activeBombs);
-  if (newPosition[0] > game.board.length-1 || 
-      newPosition[1] > game.board[0].length-1 ||
-      newPosition[0] < 0 ||
-      newPosition[1] < 0 ||
-      (game.board[newPosition[0]][newPosition[1]] && OBSTACLES.includes(game.board[newPosition[0]][newPosition[1]]!)) ||
+  if ((game.board[newPosition[0]][newPosition[1]] && OBSTACLES.includes(game.board[newPosition[0]][newPosition[1]]!)) ||
       game.activeBombs.find(bomb => JSON.stringify(bomb.position) === JSON.stringify(newPosition))
     ) {
     return false;
@@ -17,6 +13,69 @@ export const isValidMove = (newPosition: Position, game: Game): boolean => {
   return true;
 }
 
+export const calculateExplosion = (startPoint: Position, game: Game): ExplosionPos => {
+  
+  let newExplosion: ExplosionPos = { '+': [startPoint], '-': [], '|': [] };
+
+  newExplosion['-'] = [
+    ...calculateExpLine(startPoint, game, 1, '-', EXPLOSION_SIZE),
+    ...calculateExpLine(startPoint, game, -1, '-', EXPLOSION_SIZE)
+  ];
+
+  newExplosion['|'] = [
+    ...calculateExpLine(startPoint, game, 1, '|', EXPLOSION_SIZE),
+    ...calculateExpLine(startPoint, game, -1, '|', EXPLOSION_SIZE)
+  ];
+
+  return newExplosion;
+}
+
+export const calculateExpLine = (startPoint: Position, game: Game, step: 1|-1, direction: '|'|'-', size: number): Position[] => {
+  const newLine: Position[] = [];
+  switch (direction) {
+    case '-':
+      for (let i = 0; i < size; i++) {
+        if (game.board[startPoint[0]][startPoint[1]+(step*(i+1))] && OBSTACLES.includes(game.board[startPoint[0]][startPoint[1]+(step*(i+1))]!)) {
+          break;
+        }
+        else {
+          newLine.push([startPoint[0], startPoint[1]+(step*(i+1))]);  
+        }
+      }
+      break;
+    case '|':
+      for (let i = 0; i < size; i++) {
+        if (game.board[startPoint[0]+(step*(i+1))][startPoint[1]] && OBSTACLES.includes(game.board[startPoint[0]+(step*(i+1))][startPoint[1]]!)) {
+          break;
+        }
+        else {
+          newLine.push([startPoint[0]+(step*(i+1)), startPoint[1]]);  
+        }
+      }
+    default:
+      break;
+  }
+  return newLine;
+}
+
+
+
+export const playerIsDead = (game: Game): Player[] | null => { 
+  let deadPlayers: Player[] = [];
+  for (let player of game.players) {
+    
+    if (JSON.stringify(game.activeExplosions).split('game')[0].includes(JSON.stringify(player.position))) {
+      deadPlayers.push(player);
+    }
+  }
+  return deadPlayers[0] ? deadPlayers : null;
+}
+
+export const calculateWinner = (game: Game): Player | null => {
+  const alivePlayers = game.players.filter(player => !player.dead).length;
+  if (alivePlayers === 1) return alivePlayers[0];
+  return null;
+}
 
 // @ValidatorConstraint()
 // export class IsBoard implements ValidatorConstraintInterface {

@@ -19,17 +19,17 @@ const renderCel = (rowIndex, cellIndex, symbol, hasTurn) => {
 //       {cells.map((symbol, cellIndex) => renderCel(rowIndex, cellIndex, symbol, false))} 
 //     </div>
 
-export default ({board, arrowMove}) => (<div>
+export default ({board, arrowMove, dead}) => {
+  console.log(dead);
+  return (<div>
+    {!dead && <KeyboardEventHandler handleKeys={['right', 'down', 'left', 'up', 'z']} onKeyEvent={(key) => arrowMove(key)} /> }
 
-    <KeyboardEventHandler handleKeys={['right']} onKeyEvent={(key) => arrowMove(key)} /> 
-    <KeyboardEventHandler handleKeys={['down']} onKeyEvent={(key) => arrowMove(key)} /> 
-    <KeyboardEventHandler handleKeys={['left']} onKeyEvent={(key) => arrowMove(key)} /> 
-    <KeyboardEventHandler handleKeys={['up']} onKeyEvent={(key) => arrowMove(key)} /> 
-    <KeyboardEventHandler handleKeys={['z']} onKeyEvent={(key) => arrowMove(key)} /> 
 
-  {board.map((cells, rowIndex) => 
-    <div key={rowIndex}>
-      {cells.map((symbol, cellIndex) => renderCel(rowIndex, cellIndex, symbol, false))} 
-    </div>
-  )}
-</div>) 
+    {board.map((cells, rowIndex) => 
+      <div key={rowIndex}>
+        {cells.map((symbol, cellIndex) => renderCel(rowIndex, cellIndex, symbol, false))} 
+      </div>
+    )}
+  </div>)
+
+}

@@ -2,10 +2,15 @@ import { BaseEntity, PrimaryGeneratedColumn, Column, Entity, Index, OneToMany, M
 import User from '../users/entity';
 
 export type PlayerSymbol = 'x' | 'o';
-export type Symbol = PlayerSymbol | 'Q' | '▩' | '□' | '💣';
+export type Symbol = PlayerSymbol | 'Q' | '▩' | '□' | '▣' | '💣' | '-' | '|';
 export type Row = (Symbol | null)[];
 export type Board = Row[];
 export type Position = [ number, number ];
+export interface ExplosionPos {
+  '+': Position[],
+  '-': Position[],
+  '|': Position[]
+}
 
 type Status = 'pending' | 'started' | 'finished';
 
@@ -14,7 +19,7 @@ type Status = 'pending' | 'started' | 'finished';
 // const emptyRow: Row = Array(BOARD_SIZE[0]).fill(null);
 // const emptyBoard: Board = Array(BOARD_SIZE[1]).fill(emptyRow);
 
-const emptyBoard2 = [
+const emptyBoardPre: Board = [
   [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
   [null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null, '▩',  null],
   [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
@@ -32,13 +37,24 @@ const emptyBoard2 = [
   [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
 ]
 
+function makeEdges(board: Board): Board {
+  const filledRow = Array(board[0].length+2).fill('▣');
+  let newBoard = [filledRow];
+  board.forEach((row: Row) => newBoard.push(['▣', ...row, '▣']));
+  newBoard.push(filledRow);
+
+  return newBoard;
+}
+
+const emptyBoard = makeEdges(emptyBoardPre);
+
 @Entity()
 export class Game extends BaseEntity {
 
   @PrimaryGeneratedColumn()
   id?: number
 
-  @Column('json', {default: emptyBoard2})
+  @Column('json', {default: emptyBoard})
   board: Board
 
   @Column('char', {length:1, nullable: true})
@@ -54,6 +70,9 @@ export class Game extends BaseEntity {
 
   @OneToMany(_ => Bomb, bomb => bomb.game, {eager:true})
   activeBombs: Bomb[]
+
+  @OneToMany(_ => Explosion, explosion => explosion.game, {eager:true})
+  activeExplosions: Explosion[]
 }
 
 @Entity()
@@ -77,6 +96,9 @@ export class Player extends BaseEntity {
 
   @Column('json', {default: [0,0]})
   position: Position
+
+  @Column('boolean', {default: false})
+  dead: boolean 
 }
 
 @Entity()
@@ -90,4 +112,16 @@ export class Bomb extends BaseEntity {
 
   @Column('json', {default: [0,0]})
   position: Position
+}
+
+@Entity()
+export class Explosion extends BaseEntity {
+  @PrimaryGeneratedColumn()
+  id?: number
+
+  @ManyToOne(_ => Game, game => game.activeExplosions)
+  game: Game 
+
+  @Column('json', {default: [0,0]})
+  position: ExplosionPos
 }

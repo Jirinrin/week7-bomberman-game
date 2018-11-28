@@ -3,12 +3,13 @@ import {
   Body, Patch 
 } from 'routing-controllers';
 import User from '../users/entity';
-import { Game, Player, Board, Bomb } from './entities';
-import {isValidMove} from './logic';
+import { Game, Player, Board, Bomb, Explosion } from './entities';
+import {isValidMove, calculateExplosion, playerIsDead} from './logic';
 // import { Validate } from 'class-validator';
 import {io} from '../index';
 
 const BOMB_FUSE = 5000;
+const EXPLOSION_DURATION = 1000;
 
 class GameUpdate {
 
@@ -39,7 +40,7 @@ export default class GameController {
       game: entity,
       user,
       symbol: 'x',
-      position: [0, 0]
+      position: [1, 1]
     }).save();
 
     const game = await Game.findOneById(entity.id);
@@ -159,6 +160,7 @@ export default class GameController {
     return player;
   }
 
+  
   @Authorized()
   @Post('/games/:id([0-9]+)/bombs')
   async placeBomb(
@@ -168,6 +170,7 @@ export default class GameController {
     const game = await Game.findOneById(gameId);
     if (!game) throw new NotFoundError(`Game does not exist`);
 
+    // Place bomb
 
     const newBomb: Bomb = await Bomb.create({
       game,
@@ -186,13 +189,50 @@ export default class GameController {
     });
 
     await sleep(BOMB_FUSE);
-    await newBomb.remove();
 
-    const updatedGame = await Game.findOneById(gameId);
+    // Bomb explodes
+
+    await newBomb.remove();
+    const updateAfterBomb = await Game.findOneById(gameId);
+
+    const newExplosion: Explosion = await Explosion.create({
+      game: updateAfterBomb,
+      position: calculateExplosion(position, game)
+    }).save();
+
+    let gameDuringExplosion: Game = {
+      ...updateAfterBomb,
+      activeExplosions: [
+        ...game.activeExplosions,
+        newExplosion
+      ]
+    } as Game;
+
+    const deadPlayers = playerIsDead(gameDuringExplosion);
+    if (deadPlayers) {
+      deadPlayers.forEach(async player => {
+        /// misschien findbyid apart nog doen
+        player.dead = true;
+        gameDuringExplosion = { ...gameDuringExplosion, players: [...gameDuringExplosion.players, player] } as Game;
+        await player.save();
+      });
+    }
 
     io.emit('action', {
       type: 'UPDATE_GAME',
-      payload: updatedGame
+      payload: gameDuringExplosion
+    })
+
+    await sleep(EXPLOSION_DURATION);
+
+    // Explosion finished
+
+    await newExplosion.remove();
+    const updateAfterExplosion = await Game.findOneById(gameId);
+
+    io.emit('action', {
+      type: 'UPDATE_GAME',
+      payload: updateAfterExplosion
      });
 
     return newBomb;
