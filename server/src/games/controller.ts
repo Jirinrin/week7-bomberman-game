@@ -4,7 +4,7 @@ import {
 } from 'routing-controllers';
 import User from '../users/entity';
 import { Game, Player, Board, Bomb, Explosion } from './entities';
-import {isValidMove, calculateExplosion, playerIsDead} from './logic';
+import {isValidMove, calculateExplosion, playersAreDead, calculateWinner} from './logic';
 // import { Validate } from 'class-validator';
 import {io} from '../index';
 
@@ -73,7 +73,7 @@ export default class GameController {
       user,
       /// moet ook beter
       symbol: 'o',
-      position: [10, 10]
+      position: [15, 17]
     }).save();
 
     io.emit('action', {
@@ -147,14 +147,17 @@ export default class GameController {
     const updateId: number = player.id || 0;
     const newPlayers = game.players.map((pl) => pl.id === updateId ? player : pl );
 
-    await game.save();
+    /// misschien weg
+    // await game.save();
+
+    let gameAfterPositionUpdate: Game = { ...game, players: newPlayers } as Game;
+
+    const gameAfterDeadPlayers = await checkForDeadPlayers(gameAfterPositionUpdate, gameId);
+    if (gameAfterDeadPlayers) gameAfterPositionUpdate = gameAfterDeadPlayers;
     
     io.emit('action', {
       type: 'UPDATE_GAME',
-      payload: {
-        ...game,
-        players: newPlayers
-      }
+      payload: gameAfterPositionUpdate
     });
 
     return player;
@@ -208,15 +211,8 @@ export default class GameController {
       ]
     } as Game;
 
-    const deadPlayers = playerIsDead(gameDuringExplosion);
-    if (deadPlayers) {
-      deadPlayers.forEach(async player => {
-        /// misschien findbyid apart nog doen
-        player.dead = true;
-        gameDuringExplosion = { ...gameDuringExplosion, players: [...gameDuringExplosion.players, player] } as Game;
-        await player.save();
-      });
-    }
+    const gameAfterDeadPlayers = await checkForDeadPlayers(gameDuringExplosion, gameId);
+    if (gameAfterDeadPlayers) gameDuringExplosion = gameAfterDeadPlayers;
 
     io.emit('action', {
       type: 'UPDATE_GAME',
@@ -254,3 +250,23 @@ export default class GameController {
   }
 }
 
+async function checkForDeadPlayers(game: Game, gameId: number): Promise<Game|null> {
+  const deadPlayers = playersAreDead(game);
+  let gameCopy: Game|null = null;
+  if (deadPlayers) {
+    deadPlayers.forEach(async player => {
+      player.dead = true;
+      gameCopy = { ...game, players: [...game.players, player] } as Game;
+      await player.save();
+    });
+
+    const winner = calculateWinner(game);
+    if (winner) {
+      let finishedGame = await Game.findOneById(gameId) as Game;
+      finishedGame.winner = winner.symbol;
+      finishedGame.status = 'finished';
+      await finishedGame.save();
+    }
+  }
+  return gameCopy;
+}

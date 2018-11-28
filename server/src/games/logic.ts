@@ -60,7 +60,7 @@ export const calculateExpLine = (startPoint: Position, game: Game, step: 1|-1, d
 
 
 
-export const playerIsDead = (game: Game): Player[] | null => { 
+export const playersAreDead = (game: Game): Player[] | null => { 
   let deadPlayers: Player[] = [];
   for (let player of game.players) {
     
@@ -72,8 +72,9 @@ export const playerIsDead = (game: Game): Player[] | null => {
 }
 
 export const calculateWinner = (game: Game): Player | null => {
-  const alivePlayers = game.players.filter(player => !player.dead).length;
-  if (alivePlayers === 1) return alivePlayers[0];
+  const alivePlayers = game.players.filter(player => !player.dead);
+  if (alivePlayers.length === 1) return alivePlayers[0];
+  // if (alivePlayers.length === 0 return meh)
   return null;
 }
 

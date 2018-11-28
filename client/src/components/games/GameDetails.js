@@ -24,26 +24,26 @@ class GameDetails extends PureComponent {
   joinGame = () => this.props.joinGame(this.props.game.id);
 
   arrowMove = (key) => {
-    const {currentPlayerPosition, game} = this.props
+    const {currentPlayer, game} = this.props
     if(key === 'right') {
       console.log('move to right')
-      this.props.updateCurrentPlayerPosition(game.id, [currentPlayerPosition[0], currentPlayerPosition[1] + 1 ]) 
+      this.props.updateCurrentPlayerPosition(game.id, [currentPlayer.position[0], currentPlayer.position[1] + 1 ]) 
     }
     if(key === 'left') {
       console.log('move to left')
-      this.props.updateCurrentPlayerPosition(game.id, [currentPlayerPosition[0], currentPlayerPosition[1] - 1 ]) 
+      this.props.updateCurrentPlayerPosition(game.id, [currentPlayer.position[0], currentPlayer.position[1] - 1 ]) 
     }
     if(key === 'up') {
       console.log('move up')
-      this.props.updateCurrentPlayerPosition(game.id, [currentPlayerPosition[0]- 1, currentPlayerPosition[1]]) 
+      this.props.updateCurrentPlayerPosition(game.id, [currentPlayer.position[0]- 1, currentPlayer.position[1]]) 
     }
     if(key === 'down') {
       console.log('move to down')
-      this.props.updateCurrentPlayerPosition(game.id, [currentPlayerPosition[0] + 1, currentPlayerPosition[1]]) 
+      this.props.updateCurrentPlayerPosition(game.id, [currentPlayer.position[0] + 1, currentPlayer.position[1]]) 
     }
     if(key === 'z') {
       console.log('Place bomb')
-      this.props.placeBomb(game.id, currentPlayerPosition) 
+      this.props.placeBomb(game.id, currentPlayer.position) 
     }
   }
 
@@ -86,7 +86,7 @@ class GameDetails extends PureComponent {
 
       {
         game.status !== 'pending' &&
-        <Board board={formattedBoard} arrowMove={this.arrowMove} dead={currentPlayer.dead}/>
+        <Board board={formattedBoard} arrowMove={this.arrowMove} dead={currentPlayer.dead} finished={game.status === 'finished'}/>
       }
     </Paper>)
   }
@@ -100,7 +100,6 @@ const mapStateToProps = (state, props) => ({
   currentPlayer: state.games && state.currentUser && state.games[props.match.params.id].status !== 'pending' && state.games[props.match.params.id].players.find(player => player.userId === userId(state.currentUser.jwt)),
   formattedBoard: formatBoard(state.games ? state.games[props.match.params.id] : null),
   /// weghalen en beter ofzo
-  currentPlayerPosition: state.games && state.currentUser && state.games[props.match.params.id].status !== 'pending' && state.games[props.match.params.id].players.find(player => player.userId === userId(state.currentUser.jwt)).position
 });
 
 const mapDispatchToProps = {

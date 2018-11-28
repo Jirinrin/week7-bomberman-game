@@ -9,7 +9,7 @@ const renderCel = (rowIndex, cellIndex, symbol, hasTurn) => {
       disabled={hasTurn}
       
       key={`${rowIndex}-${cellIndex}`}
-    >{symbol || '-'}</button>
+    >{symbol || '.'}</button>
     
   )
 }
@@ -19,10 +19,10 @@ const renderCel = (rowIndex, cellIndex, symbol, hasTurn) => {
 //       {cells.map((symbol, cellIndex) => renderCel(rowIndex, cellIndex, symbol, false))} 
 //     </div>
 
-export default ({board, arrowMove, dead}) => {
+export default ({board, arrowMove, dead, finished}) => {
   console.log(dead);
   return (<div>
-    {!dead && <KeyboardEventHandler handleKeys={['right', 'down', 'left', 'up', 'z']} onKeyEvent={(key) => arrowMove(key)} /> }
+    {!dead && !finished && <KeyboardEventHandler handleKeys={['right', 'down', 'left', 'up', 'z']} onKeyEvent={(key) => arrowMove(key)} /> }
 
 
     {board.map((cells, rowIndex) => 
