@@ -56,32 +56,33 @@ class Board extends Component {
     
   }
 
-  componentDidUpdate(oldProps) {
-    if (JSON.stringify(this.props.board) !== JSON.stringify(oldProps.board)) {
-      const diff = oldProps.board.map((row, i) => {
-        return row.map((cell, j) => {
-          if (cell === oldProps[j][i]) return null;
-          if (cell === null && cell !== oldProps[j][i]) return [{type: 'add', symbol: cell, position: [j, i]}];
-          if (cell !== null) {
-            if (oldProps[j][i] === null) return [{type: 'remove', position: [j, i]}];
-            else return [ {type: 'remove', position: [j, i]},
-                          {type: 'add', symbol: cell, position: [j, i]} ]
-          }
-          return null;
-        })
-      }).filter(row => row.filter(cell => cell !== null));
+  // componentDidUpdate(oldProps) {
+  //   // if (JSON.stringify(this.props.board) !== JSON.stringify(oldProps.board)) {
+  //   //   const diff = oldProps.board.map((row, i) => {
+  //   //     return row.map((cell, j) => {
+  //   //       if (cell === oldProps.board[j][i]) return null;
+  //   //       if (cell === null && cell !== oldProps.board[j][i]) return [{type: 'add', symbol: cell, position: [j, i]}];
+  //   //       if (cell !== null) {
+  //   //         if (oldProps.board[j][i] === null) return [{type: 'remove', position: [j, i]}];
+  //   //         else return [ {type: 'remove', position: [j, i]},
+  //   //                       {type: 'add', symbol: cell, position: [j, i]} ]
+  //   //       }
+  //   //       return null;
+  //   //     })
+  //   //   }).filter(row => row.filter(cell => cell !== null));
 
-      console.log(diff);
-      let newBoard = this.state.board;
+  //     console.log(diff);
+
+  //     let newBoard = this.state.board;
       
-      // diff.forEach()
-      // verander nieuwe board met alle dingen
+  //     // diff.forEach()
+  //     // verander nieuwe board met alle dingen
 
-      // in geval van add als er een animatie is speel dan die animatie af bovenop het standaard spul!
+  //     // in geval van add als er een animatie is speel dan die animatie af bovenop het standaard spul!
 
-      // setstate om het te updaten
-    }
-  }
+  //     // setstate om het te updaten
+  //   }
+  // }
 
   renderCel = (rowIndex, cellIndex, symbol, hasTurn) => {
     return (
