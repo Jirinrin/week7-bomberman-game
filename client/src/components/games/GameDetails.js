@@ -124,7 +124,13 @@ function formatBoard(game) {
     game.activeExplosions.forEach(explosion => {
       console.log(explosion);
       Object.entries(explosion.position).forEach(kv => {
-        kv[1].forEach(ex => formattedBoard[ex[0]][ex[1]] = kv[0]);
+        kv[1].forEach(ex => {
+          const initialCell = formattedBoard[ex[0]][ex[1]]
+          if ((kv[0] === '-' && explosionRef['-'].includes(initialCell)) || (kv[0] === '|' && explosionRef['-'].includes(initialCell))) {
+            formattedBoard[ex[0]][ex[1]] = '+';
+          }
+          else formattedBoard[ex[0]][ex[1]] = kv[0];
+        });
       });
     });
   }
@@ -134,3 +140,8 @@ function formatBoard(game) {
   game.players.forEach(player => {if(!player.dead) formattedBoard[player.position[0]][player.position[1]] = player.symbol});
   return formattedBoard;
 }
+
+const explosionRef = {
+  '-': ['|', '^', 'v'],
+  '|': ['-', '>', '<'],
+};

@@ -10,7 +10,7 @@ import {io} from '../index';
 import { getBoard } from './boards';
 
 const BOMB_FUSE = 5000;
-const EXPLOSION_DURATION = 1000;
+const EXPLOSION_DURATION = 5000;
 
 class GameUpdate {
 
@@ -20,11 +20,11 @@ class GameUpdate {
   board: Board;
 }
 
-function sleep(ms) {
-  return new Promise(function(resolve) { 
-    setTimeout(resolve, ms)
-  });
-}
+// function sleep(ms) {
+//   return new Promise(function(resolve) { 
+//     setTimeout(resolve, ms)
+//   });
+// }
 
 @JsonController()
 export default class GameController {
@@ -267,17 +267,20 @@ export default class GameController {
         payload: gameDuringExplosion
       })
       
-      await sleep(EXPLOSION_DURATION);
+      // await sleep(EXPLOSION_DURATION);
       
       // Explosion finished
-      
-      await newExplosion.remove();
-      const updateAfterExplosion = await Game.findOneById(gameId);
-      
-      io.emit('action', {
-        type: 'UPDATE_GAME',
-        payload: updateAfterExplosion
-      });
+
+      setTimeout(async () => {
+        await newExplosion.remove();
+        const updateAfterExplosion = await Game.findOneById(gameId);
+        
+        io.emit('action', {
+          type: 'UPDATE_GAME',
+          payload: updateAfterExplosion
+        });
+
+      }, EXPLOSION_DURATION);
     }, BOMB_FUSE); 
 
     return newBomb;
