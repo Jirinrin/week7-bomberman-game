@@ -19,7 +19,7 @@ export const isValidMove = (newPosition: Position, game: Game): boolean => {
 }
 
 export const calculateExplosion = (startPoint: Position, game: Game): ExplosionPos => {
-  
+  console.log(game.activeBombs);
   let newExplosion: ExplosionPos = { '+': [startPoint], 
                                      '-': [], '|': [],
                                      '>': [], '<': [],
@@ -66,11 +66,16 @@ export const calculateExplosion = (startPoint: Position, game: Game): ExplosionP
   return newExplosion;
 }
 
+
 export const calculateExpLine = (startPoint: Position, game: Game, step: 1|-1, direction: '|'|'-', size: number): Position[] => {
   const newLine: Position[] = [];
   switch (direction) {
     case '-':
       for (let i = 0; i < size; i++) {
+        console.log([startPoint[0], startPoint[1]+(step*(i+1))]);
+        if (game.activeBombs.some(bomb => JSON.stringify(bomb.position) === JSON.stringify([startPoint[0], startPoint[1]+(step*(i+1))]))) {
+          break;
+        }
         if (game.board[startPoint[0]][startPoint[1]+(step*(i+1))] && STURDY.includes(game.board[startPoint[0]][startPoint[1]+(step*(i+1))]!)) {
           break;
         }
@@ -85,6 +90,9 @@ export const calculateExpLine = (startPoint: Position, game: Game, step: 1|-1, d
       break;
     case '|':
       for (let i = 0; i < size; i++) {
+        if (game.activeBombs.some(bomb => JSON.stringify(bomb.position) === JSON.stringify([startPoint[0]+(step*(i+1)), startPoint[1]]))) {
+          break;
+        }
         if (game.board[startPoint[0]+(step*(i+1))][startPoint[1]] && STURDY.includes(game.board[startPoint[0]+(step*(i+1))][startPoint[1]]!)) {
           break;
         }

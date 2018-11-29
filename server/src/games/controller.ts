@@ -247,7 +247,7 @@ export default class GameController {
       
       const newExplosion: Explosion = await Explosion.create({
         game: updateAfterBomb,
-        position: calculateExplosion(position, game)
+        position: calculateExplosion(position, updateAfterBomb!)
       }).save();
       
       // let gameDuringExplosion: Game = updateAfterBomb!;
