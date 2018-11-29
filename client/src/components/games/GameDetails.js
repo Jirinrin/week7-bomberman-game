@@ -25,19 +25,19 @@ class GameDetails extends PureComponent {
     const {currentPlayer, game} = this.props;
     if (key === 'right') {
       console.log('move to right');
-      this.props.updateCurrentPlayerPosition(game.id, [currentPlayer.position[0], currentPlayer.position[1] + 1 ]); 
+      this.props.updateCurrentPlayerPosition(game.id, [currentPlayer.position[0], currentPlayer.position[1] + 1 ], '>'); 
     }
     if (key === 'left') {
       console.log('move to left');
-      this.props.updateCurrentPlayerPosition(game.id, [currentPlayer.position[0], currentPlayer.position[1] - 1 ]); 
+      this.props.updateCurrentPlayerPosition(game.id, [currentPlayer.position[0], currentPlayer.position[1] - 1 ], '<'); 
     }
     if (key === 'up') {
       console.log('move up');
-      this.props.updateCurrentPlayerPosition(game.id, [currentPlayer.position[0]- 1, currentPlayer.position[1]]); 
+      this.props.updateCurrentPlayerPosition(game.id, [currentPlayer.position[0]- 1, currentPlayer.position[1]], '^'); 
     }
     if (key === 'down') {
-      console.log('move to down');
-      this.props.updateCurrentPlayerPosition(game.id, [currentPlayer.position[0] + 1, currentPlayer.position[1]]); 
+      console.log('move down');
+      this.props.updateCurrentPlayerPosition(game.id, [currentPlayer.position[0] + 1, currentPlayer.position[1]], 'v'); 
     }
     if (key === 'z') {
       console.log('Place bomb');
@@ -126,7 +126,7 @@ function formatBoard(game) {
       Object.entries(explosion.position).forEach(kv => {
         kv[1].forEach(ex => {
           const initialCell = formattedBoard[ex[0]][ex[1]]
-          if ((kv[0] === '-' && explosionRef['-'].includes(initialCell)) || (kv[0] === '|' && explosionRef['-'].includes(initialCell))) {
+          if ((kv[0] === '-' && explosionRef['-'].includes(initialCell)) || (kv[0] === '|' && explosionRef['|'].includes(initialCell))) {
             formattedBoard[ex[0]][ex[1]] = '+';
           }
           else formattedBoard[ex[0]][ex[1]] = kv[0];
@@ -137,7 +137,7 @@ function formatBoard(game) {
   if (game.activeBombs[0]) {
     game.activeBombs.forEach(bomb => formattedBoard[bomb.position[0]][bomb.position[1]] = '💣');
   }
-  game.players.forEach(player => {if(!player.dead) formattedBoard[player.position[0]][player.position[1]] = player.symbol});
+  game.players.forEach(player => {if(!player.dead) formattedBoard[player.position[0]][player.position[1]] = player.symbol + player.facing});
   return formattedBoard;
 }
 

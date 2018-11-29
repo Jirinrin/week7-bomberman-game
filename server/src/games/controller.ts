@@ -9,8 +9,8 @@ import {isValidMove, calculateExplosion, playersAreDead, calculateWinner} from '
 import {io} from '../index';
 import { getBoard } from './boards';
 
-const BOMB_FUSE = 5000;
-const EXPLOSION_DURATION = 5000;
+const BOMB_FUSE = 4000;
+const EXPLOSION_DURATION = 2000;
 
 class GameUpdate {
 
@@ -20,11 +20,11 @@ class GameUpdate {
   board: Board;
 }
 
-// function sleep(ms) {
-//   return new Promise(function(resolve) { 
-//     setTimeout(resolve, ms)
-//   });
-// }
+function sleep(ms) {
+  return new Promise(function(resolve) { 
+    setTimeout(resolve, ms)
+  });
+}
 
 @JsonController()
 export default class GameController {
@@ -175,19 +175,21 @@ export default class GameController {
   async updatePlayer(
     @CurrentUser() user: User,
     @Param('id') gameId: number,
-    @Body() {position}: any
+    @Body() {position, facing}: any
   ) {
     const game = await Game.findOneById(gameId);
     if (!game) throw new NotFoundError(`Game does not exist`);
 
     const player = await Player.findOne({ user, game });
 
-    if (!isValidMove(position, game)) return player;
-
     if (!player) throw new ForbiddenError(`You are not part of this game`);
     if (game.status !== 'started') throw new BadRequestError(`The game is not started yet`);
 
-    player.position = position;
+    if (!isValidMove(position, game)) {
+      if (player.facing === facing) return player;
+    }
+    else player.position = position;
+    player.facing = facing;
     await player.save();
 
     const updateId: number = player.id || 0;
@@ -248,8 +250,9 @@ export default class GameController {
         position: calculateExplosion(position, game)
       }).save();
       
-      let gameDuringExplosion: Game = updateAfterBomb!;
-      gameDuringExplosion.activeExplosions = [ ...game.activeExplosions, newExplosion ];
+      // let gameDuringExplosion: Game = updateAfterBomb!;
+      // gameDuringExplosion.activeExplosions = [ ...game.activeExplosions, newExplosion ];
+      let gameDuringExplosion: Game = await Game.findOneById(gameId) as Game;
 
       const gameAfterDeadPlayers = await checkForDeadPlayers(gameDuringExplosion, gameId);
       if (gameAfterDeadPlayers) gameDuringExplosion = gameAfterDeadPlayers;
@@ -267,20 +270,20 @@ export default class GameController {
         payload: gameDuringExplosion
       })
       
-      // await sleep(EXPLOSION_DURATION);
+      await sleep(EXPLOSION_DURATION);
       
       // Explosion finished
 
-      setTimeout(async () => {
-        await newExplosion.remove();
-        const updateAfterExplosion = await Game.findOneById(gameId);
-        
-        io.emit('action', {
-          type: 'UPDATE_GAME',
-          payload: updateAfterExplosion
-        });
+      // setTimeout(async () => {
+      await newExplosion.remove();
+      const updateAfterExplosion = await Game.findOneById(gameId);
+      
+      io.emit('action', {
+        type: 'UPDATE_GAME',
+        payload: updateAfterExplosion
+      });
 
-      }, EXPLOSION_DURATION);
+      // }, EXPLOSION_DURATION);
     }, BOMB_FUSE); 
 
     return newBomb;

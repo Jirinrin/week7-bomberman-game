@@ -18,6 +18,7 @@ export interface ExplosionPos {
   '^': Position[],
   'v': Position[],
 }
+export type PlayerFacing = '>' | '<' | '^' | 'v';
 
 type Status = 'pending' | 'started' | 'finished';
 
@@ -76,6 +77,9 @@ export class Player extends BaseEntity {
 
   @Column('json', {default: [0,0]})
   position: Position
+
+  @Column('char', {length: 1, default: 'v'})
+  facing: PlayerFacing
 
   @Column('boolean', {default: false})
   dead: boolean 

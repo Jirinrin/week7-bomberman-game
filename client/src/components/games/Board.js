@@ -5,9 +5,13 @@ import KeyboardEventHandler from 'react-keyboard-event-handler'
 
 // this.props.board.map((row, i) => {
 //   return row.map((cell, j) => {
-//     ...
+//     <Image x={j*50} y={i*50} width={50} height={50} src={reference[cell]} />
 //   })
 // })
+
+// const reference = {
+//   '-': './explosion-line.gif'
+// }
 
 class Board extends Component {
   state = {  }

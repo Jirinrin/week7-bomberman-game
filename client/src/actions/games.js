@@ -107,7 +107,7 @@ export const updateGame = (gameId, board) => (dispatch, getState) => {
     .catch(err => console.error(err));
 }
 
-export const updateCurrentPlayerPosition = (gameId, position) => (dispatch, getState) => {
+export const updateCurrentPlayerPosition = (gameId, position, facing) => (dispatch, getState) => {
   const state = getState();
   const jwt = state.currentUser.jwt;
 
@@ -116,7 +116,7 @@ export const updateCurrentPlayerPosition = (gameId, position) => (dispatch, getS
   request
     .patch(`${baseUrl}/games/${gameId}/players`)
     .set('Authorization', `Bearer ${jwt}`)
-    .send({ position })
+    .send({ position, facing })
     .then(_ => dispatch(updateGameSuccess()))
     .catch(err => console.error(err));    
 }
