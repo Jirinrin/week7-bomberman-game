@@ -122,9 +122,10 @@ function formatBoard(game) {
   
   if (game.activeExplosions[0]) {
     game.activeExplosions.forEach(explosion => {
-      explosion.position['+'].forEach(ex => formattedBoard[ex[0]][ex[1]] = '+')
-      explosion.position['-'].forEach(ex => formattedBoard[ex[0]][ex[1]] = '—')
-      explosion.position['|'].forEach(ex => formattedBoard[ex[0]][ex[1]] = '|')
+      console.log(explosion);
+      Object.entries(explosion.position).forEach(kv => {
+        kv[1].forEach(ex => formattedBoard[ex[0]][ex[1]] = kv[0]);
+      });
     });
   }
   if (game.activeBombs[0]) {

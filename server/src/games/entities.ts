@@ -3,14 +3,20 @@ import User from '../users/entity';
 import {defaultBoard} from './boards';
 
 export type PlayerSymbol = 'x' | 'o' | '☆' | 'ᗣ';
-export type Symbol = PlayerSymbol | 'Q' | '▩' | '□' | '▣' | '💣' | '-' | '|';
+export type ObstacleSymbol = '▩' | '□' | '▣';
+export type ExplosionSymbol = '-' | '|' | '>' | '<' | '^' | 'v';
+export type Symbol = PlayerSymbol | ObstacleSymbol | ExplosionSymbol | '💣';
 export type Row = (Symbol | null)[];
 export type Board = Row[];
 export type Position = [ number, number ];
 export interface ExplosionPos {
   '+': Position[],
   '-': Position[],
-  '|': Position[]
+  '|': Position[],
+  '>': Position[],
+  '<': Position[],
+  '^': Position[],
+  'v': Position[],
 }
 
 type Status = 'pending' | 'started' | 'finished';

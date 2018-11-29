@@ -20,16 +20,47 @@ export const isValidMove = (newPosition: Position, game: Game): boolean => {
 
 export const calculateExplosion = (startPoint: Position, game: Game): ExplosionPos => {
   
-  let newExplosion: ExplosionPos = { '+': [startPoint], '-': [], '|': [] };
+  let newExplosion: ExplosionPos = { '+': [startPoint], 
+                                     '-': [], '|': [],
+                                     '>': [], '<': [],
+                                     '^': [], 'v': [] };
 
   newExplosion['-'] = [
-    ...calculateExpLine(startPoint, game, 1, '-', EXPLOSION_SIZE),
+    ...calculateExpLine(startPoint, game, 1, '-', EXPLOSION_SIZE)
+        .filter((pos, i) => {
+          if (i >= EXPLOSION_SIZE - 1) {
+            newExplosion['>'].push(pos);
+            return false;
+          }
+          return true;
+        }),
     ...calculateExpLine(startPoint, game, -1, '-', EXPLOSION_SIZE)
+        .filter((pos, i) => {
+          if (i >= EXPLOSION_SIZE - 1) {
+            newExplosion['<'].push(pos);
+            return false;
+          }
+          return true;
+        }),
   ];
 
   newExplosion['|'] = [
-    ...calculateExpLine(startPoint, game, 1, '|', EXPLOSION_SIZE),
+    ...calculateExpLine(startPoint, game, 1, '|', EXPLOSION_SIZE)
+        .filter((pos, i) => {
+          if (i >= EXPLOSION_SIZE - 1) {
+            newExplosion['v'].push(pos);
+            return false;
+          }
+          return true;
+        }),
     ...calculateExpLine(startPoint, game, -1, '|', EXPLOSION_SIZE)
+        .filter((pos, i) => {
+          if (i >= EXPLOSION_SIZE - 1) {
+            newExplosion['^'].push(pos);
+            return false;
+          }
+          return true;
+        }),
   ];
 
   return newExplosion;
