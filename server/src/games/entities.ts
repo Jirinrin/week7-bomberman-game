@@ -19,6 +19,7 @@ export interface ExplosionPos {
   'v': Position[],
 }
 export type PlayerFacing = '>' | '<' | '^' | 'v';
+// export type Flames
 
 type Status = 'pending' | 'started' | 'finished';
 
@@ -54,6 +55,9 @@ export class Game extends BaseEntity {
 
   @OneToMany(_ => Explosion, explosion => explosion.game, {eager:true})
   activeExplosions: Explosion[]
+
+  // @OneToMany(_ => Flames, flames => flames.game, {eager:true})
+  // activeFlames: Flames[]
 }
 
 @Entity()
@@ -109,3 +113,17 @@ export class Explosion extends BaseEntity {
   @Column('json', {default: [0,0]})
   position: ExplosionPos
 }
+
+
+
+// @Entity()
+// export class Flames extends BaseEntity {
+//   PrimaryGeneretedColumm()
+//   id?: number
+
+//   @ManyToOne(_ => Game, game=> game.activeFlames)
+//   game: Game
+
+//   @Column('json', {default: [0,0]})
+//   position: FlamesPos
+// }

@@ -4356,6 +4356,11 @@ klaw@^1.0.0:
   optionalDependencies:
     graceful-fs "^4.1.9"
 
+konva@^2.5.1:
+  version "2.5.1"
+  resolved "https://registry.yarnpkg.com/konva/-/konva-2.5.1.tgz#cca611a9522e831e54cf57c508a1aed3f0ceac25"
+  integrity sha512-YdHEWqmbWPieqIZuLx7JFGm9Ui08hSUaSJ2k2Ml8o5giFgJ0WmxAS0DPXIM+Ty2ADRagOHZfXSJ/skwYqqlwgQ==
+
 latest-version@^3.0.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/latest-version/-/latest-version-3.1.0.tgz#a205383fea322b33b5ae3b18abee0dc2f356ee15"
@@ -5856,6 +5861,14 @@ react-keyboard-event-handler@^1.4.1:
   resolved "https://registry.yarnpkg.com/react-keyboard-event-handler/-/react-keyboard-event-handler-1.4.1.tgz#3122ab3ceab3df0414a8afb58aa07e93fc34f30e"
   integrity sha512-F7e/nHXyfY8Szle1lxTf7iJ7Vnnq9xGV5Jcu1nB1+lmLRkLiLFhMk4Kc1iOJWdxuhj9pg5xsB8IuAAVpawkTwg==
 
+react-konva@1.7.2:
+  version "1.7.2"
+  resolved "https://registry.yarnpkg.com/react-konva/-/react-konva-1.7.2.tgz#55f640acfbea723139198274e18aa951d7937fff"
+  integrity sha512-RLfI6nHenGkFqfMICz8VsyEWnMJyUxnI7bfvIOPKnoE7MO24k7ywKV0Yr4FwiYu69L7pERw1HDADayGPT+uk1Q==
+  dependencies:
+    fbjs "^0.8.16"
+    react-reconciler "^0.9.0"
+
 react-lifecycles-compat@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/react-lifecycles-compat/-/react-lifecycles-compat-1.0.2.tgz#551d8b1d156346e5fcf30ffac9b32ce3f78b8850"
@@ -5865,6 +5878,16 @@ react-popper@^0.8.0:
   resolved "https://registry.yarnpkg.com/react-popper/-/react-popper-0.8.2.tgz#092095ff13933211d3856d9f325511ec3a42f12c"
   dependencies:
     popper.js "^1.12.9"
+    prop-types "^15.6.0"
+
+react-reconciler@^0.9.0:
+  version "0.9.0"
+  resolved "https://registry.yarnpkg.com/react-reconciler/-/react-reconciler-0.9.0.tgz#759d39f2ecd2fcb58e5fe0015ecb1c2da642f8a1"
+  integrity sha512-ObXPBCDfB2U3/nMFg5Ev9c/utNzpYYxlcg0g0u7dZJLDF8u869cJJG1oU+m/sFZQqIzlv6ffyUdvjROj3WOuqw==
+  dependencies:
+    fbjs "^0.8.16"
+    loose-envify "^1.1.0"
+    object-assign "^4.1.1"
     prop-types "^15.6.0"
 
 react-redux@^5.0.7:
