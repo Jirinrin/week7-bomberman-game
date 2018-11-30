@@ -23,7 +23,7 @@ const reference = [
 ];
 
 const animations = {
-  idle:   ['💣'],
+  idle:   ['💣', 'x>', 'x<', 'x^', 'xv'],
   add:    ['-', '|', '+', '<', '>', '^', 'v'],
   remove: ['□', 'db^', 'dbv', 'df^', 'dfv'], /// en bom?
 }
@@ -66,7 +66,9 @@ class Board extends Component {
 
   renderNewImg = (symbol, x, y) => {
     if (animations.idle.includes(symbol)) {
-      return <Animation key={`${x}-${y}-${symbol}`} src={require(`../../images/${symbol}_i.gif`)} x={x} y={y} frameRate={13} type={'idle'} frames={4} />
+      const framesCount = symbol === '💣' ? 4 : 2;
+      const frameRate = symbol === '💣' ? 13 : 4;
+      return <Animation key={`${x}-${y}-${symbol}`} src={require(`../../images/${symbol}_i.gif`)} x={x} y={y} frameRate={frameRate} type={'idle'} frames={framesCount} />
     }
     if (animations.add.includes(symbol)) {
       return <Animation key={`${x}-${y}-${symbol}`} src={require(`../../images/${symbol}_a.gif`)} x={x} y={y} frameRate={13} type={'add'} frames={4} />
