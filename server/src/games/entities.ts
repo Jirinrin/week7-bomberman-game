@@ -5,13 +5,14 @@ import {defaultBoard} from './boards';
 export type PlayerSymbol = 'x' | 'o' | '☆' | 'ᗣ';
 export type ObstacleSymbol = '▩' | '□' | '▣';
 export type ExplosionSymbol = '-' | '|' | '>' | '<' | '^' | 'v';
-export type Symbol = PlayerSymbol | ObstacleSymbol | ExplosionSymbol | '💣';
+export type PowerupSymbol = 'db^' | 'dbv' | 'df^' | 'dfv' | 'null';
+export type Symbol = PlayerSymbol | ObstacleSymbol | ExplosionSymbol | PowerupSymbol | '💣' | '@';
 export type Row = (Symbol | null)[];
 export type Board = Row[];
 export type Position = [ number, number ];
 export interface ExplosionPos {
   '+': Position[],
-  '-': Position[],
+  '-': Position[], /// waarom zitten hier komma's...
   '|': Position[],
   '>': Position[],
   '<': Position[],
@@ -19,6 +20,12 @@ export interface ExplosionPos {
   'v': Position[],
 }
 export type PlayerFacing = '>' | '<' | '^' | 'v';
+export interface PlayerStats {
+  power: number;
+  bombs: number;
+  speed: number;
+}
+export type FlamePos = [number, number];
 // export type Flames
 
 type Status = 'pending' | 'started' | 'finished';
@@ -27,7 +34,6 @@ type Status = 'pending' | 'started' | 'finished';
 
 // const emptyRow: Row = Array(BOARD_SIZE[0]).fill(null);
 // const emptyBoard: Board = Array(BOARD_SIZE[1]).fill(emptyRow);
-
 
 
 @Entity()
@@ -56,8 +62,8 @@ export class Game extends BaseEntity {
   @OneToMany(_ => Explosion, explosion => explosion.game, {eager:true})
   activeExplosions: Explosion[]
 
-  // @OneToMany(_ => Flames, flames => flames.game, {eager:true})
-  // activeFlames: Flames[]
+  @OneToMany(_ => Flame, flame => flame.game, {eager:true})
+  activeFlames: Flame[]
 }
 
 @Entity()
@@ -86,7 +92,13 @@ export class Player extends BaseEntity {
   facing: PlayerFacing
 
   @Column('boolean', {default: false})
-  dead: boolean 
+  dead: boolean
+
+  @Column('json', {default: {power: 1, bombs: 1, speed: 3}})
+  stats: PlayerStats
+
+  @Column('int', {default: 0})
+  activeBombs: number
 }
 
 @Entity()
@@ -100,6 +112,9 @@ export class Bomb extends BaseEntity {
 
   @Column('json', {default: [0,0]})
   position: Position
+
+  @Column('int', {default: 2})
+  power: number
 }
 
 @Entity()
@@ -116,14 +131,14 @@ export class Explosion extends BaseEntity {
 
 
 
-// @Entity()
-// export class Flames extends BaseEntity {
-//   PrimaryGeneretedColumm()
-//   id?: number
+@Entity()
+export class Flame extends BaseEntity {
+  @PrimaryGeneratedColumn()
+  id?: number
 
-//   @ManyToOne(_ => Game, game=> game.activeFlames)
-//   game: Game
+  @ManyToOne(_ => Game, game => game.activeFlames)
+  game: Game
 
-//   @Column('json', {default: [0,0]})
-//   position: FlamesPos
-// }
+  @Column('json', {default: [0,0]})
+  position: FlamePos
+}

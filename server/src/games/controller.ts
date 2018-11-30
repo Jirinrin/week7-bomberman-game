@@ -1,16 +1,36 @@
-import { 
-  JsonController, Authorized, CurrentUser, Post, Param, BadRequestError, HttpCode, NotFoundError, ForbiddenError, Get, 
-  Body, Patch 
+import {
+  JsonController, Authorized, CurrentUser, Post, Param, BadRequestError, HttpCode, NotFoundError, ForbiddenError, Get,
+  Body, Patch
 } from 'routing-controllers';
 import User from '../users/entity';
-import { Game, Player, Board, Bomb, Explosion } from './entities';
-import {isValidMove, calculateExplosion, playersAreDead, calculateWinner} from './logic';
+import { Game, Player, Board, Bomb, Explosion, Flame, PowerupSymbol } from './entities';
+import { isValidMove, calculateExplosion, playersAreDead, calculateWinner, hitByFlame, calculateFlamePos } from './logic';
 // import { Validate } from 'class-validator';
-import {io} from '../index';
+import { io } from '../index';
 import { getBoard } from './boards';
 
-const BOMB_FUSE = 4000;
-const EXPLOSION_DURATION = 2000;
+const BOMB_FUSE = 3000;
+const FLAME_LAUNCH_FUSE = 100;
+const FLAME_FUSE = 100;
+const EXPLOSION_DURATION = 1500;
+
+const ITEM_CHANCES = {
+  'null': 8,
+  'db^': 1,
+  'dbv': 1,
+  'df^': 1,
+  'dfv': 1
+};
+const totalChance = Object.values(ITEM_CHANCES).reduce((acc, curr) => acc + curr);
+
+let counter = 0;
+const ITEM_DROP_MAP: { [num: number]: PowerupSymbol } = Object.keys(ITEM_CHANCES).reduce((acc, currentDrop) => {
+  const newAcc = { ...acc, [currentDrop]: ITEM_CHANCES[currentDrop] / totalChance + counter - (1 / totalChance) }
+  counter += ITEM_CHANCES[currentDrop] / totalChance;
+  return newAcc;
+}, {});
+
+// console.log(ITEM_DROP_MAP);
 
 class GameUpdate {
 
@@ -21,7 +41,7 @@ class GameUpdate {
 }
 
 function sleep(ms) {
-  return new Promise(function(resolve) { 
+  return new Promise(function (resolve) {
     setTimeout(resolve, ms)
   });
 }
@@ -76,13 +96,13 @@ export default class GameController {
       user
     })
 
-    switch(game.players.length) {
+    switch (game.players.length) {
       case 1:
         player.symbol = 'o';
-        player.position = [15, 17];
+        player.position = [1, 6];
         break;
-      case 2: 
-        player.symbol =  '☆';
+      case 2:
+        player.symbol = '☆';
         player.position = [1, 17];
         break;
       case 3:
@@ -94,7 +114,7 @@ export default class GameController {
       default:
         throw new ForbiddenError(`Game is full`)
     }
-    
+
     await player.save();
 
     /// Kan wss nog zonder findOnebyId
@@ -158,7 +178,7 @@ export default class GameController {
     // }
     game.board = update.board;
     await game.save();
-    
+
     io.emit('action', {
       type: 'UPDATE_GAME',
       payload: game
@@ -175,7 +195,7 @@ export default class GameController {
   async updatePlayer(
     @CurrentUser() user: User,
     @Param('id') gameId: number,
-    @Body() {position, facing}: any
+    @Body() { position, facing }: any
   ) {
     const game = await Game.findOneById(gameId);
     if (!game) throw new NotFoundError(`Game does not exist`);
@@ -190,10 +210,29 @@ export default class GameController {
     }
     else player.position = position;
     player.facing = facing;
+
+    if (Object.keys(ITEM_CHANCES).includes(game.board[player.position[0]][player.position[1]]!)) {
+      switch (game.board[player.position[0]][player.position[1]]) {
+        case 'db^':
+          player.stats.bombs = player.stats.bombs + 1;
+          break;
+        case 'dbv':
+          player.stats.bombs = player.stats.bombs - 1 || 1;
+          break;
+        case 'df^':
+          player.stats.power = player.stats.power + 1;
+          break;
+        case 'dfv':
+          player.stats.power = player.stats.power - 1 || 1;
+      }
+      game.board[player.position[0]][player.position[1]] = null;
+      await game.save();
+    }
+
     await player.save();
 
     const updateId: number = player.id || 0;
-    const newPlayers = game.players.map((pl) => pl.id === updateId ? player : pl );
+    const newPlayers = game.players.map((pl) => pl.id === updateId ? player : pl);
 
     /// misschien weg
     // await game.save();
@@ -202,7 +241,7 @@ export default class GameController {
 
     const gameAfterDeadPlayers = await checkForDeadPlayers(gameAfterPositionUpdate, gameId);
     if (gameAfterDeadPlayers) gameAfterPositionUpdate = gameAfterDeadPlayers;
-    
+
     io.emit('action', {
       type: 'UPDATE_GAME',
       payload: gameAfterPositionUpdate
@@ -211,21 +250,28 @@ export default class GameController {
     return player;
   }
 
-  
+
   @Authorized()
   @Post('/games/:id([0-9]+)/bombs')
   async placeBomb(
     @Param('id') gameId: number,
-    @Body() {position}: any
+    @Body() { position, playerId }: any
   ) {
     const game = await Game.findOneById(gameId);
-    if (!game) throw new NotFoundError(`Game does not exist`);
+    let player = await Player.findOneById(playerId);
+    if (!game || !player) throw new NotFoundError(`Game or player does not exist`);
+
+    player.activeBombs = player.activeBombs + 1;
+    await player.save();
+
+    console.log('active bombs: ' + player.activeBombs);
 
     // Place bomb
 
     const newBomb: Bomb = await Bomb.create({
       game,
-      position
+      position,
+      power: player.stats.power
     }).save();
 
     io.emit('action', {
@@ -242,14 +288,19 @@ export default class GameController {
     // Bomb explodes
 
     setTimeout(async () => {
+      let updatedPlayer = await Player.findOneById(playerId) as Player;
+      console.log('now active bombs:' + updatedPlayer.activeBombs);
+      updatedPlayer.activeBombs = updatedPlayer.activeBombs - 1; /// hier gaat soms iets fout ofzo
+      await updatedPlayer.save();
+
       await newBomb.remove();
       const updateAfterBomb = await Game.findOneById(gameId);
-      
+
       const newExplosion: Explosion = await Explosion.create({
         game: updateAfterBomb,
-        position: calculateExplosion(position, updateAfterBomb!)
+        position: calculateExplosion(position, updateAfterBomb!, updatedPlayer.stats.power)
       }).save();
-      
+
       // let gameDuringExplosion: Game = updateAfterBomb!;
       // gameDuringExplosion.activeExplosions = [ ...game.activeExplosions, newExplosion ];
       let gameDuringExplosion: Game = await Game.findOneById(gameId) as Game;
@@ -259,36 +310,116 @@ export default class GameController {
 
       Object.values(newExplosion.position).forEach(positions => {
         positions.forEach(pos => {
-          gameDuringExplosion.board[pos[0]][pos[1]] = null;
+          if (gameDuringExplosion.board[pos[0]][pos[1]] === '□') {
+            const randomNo = Math.random();
+            try {
+              Object.entries(ITEM_DROP_MAP).reverse().forEach((kv, i) => {
+                if (kv[0] === 'null' || i === Object.keys(ITEM_DROP_MAP).length-1) throw null;
+                else if (randomNo > Number(kv[1])) {
+                  throw kv[0];
+                }
+              });
+            }
+            catch (value) {
+              gameDuringExplosion.board[pos[0]][pos[1]] = value;
+            }
+          }
+          else gameDuringExplosion.board[pos[0]][pos[1]] = null;
         });
       });
-      
+
       await gameDuringExplosion.save();
 
       io.emit('action', {
         type: 'UPDATE_GAME',
         payload: gameDuringExplosion
       })
-      
-      await sleep(EXPLOSION_DURATION);
-      
-      // Explosion finished
 
-      // setTimeout(async () => {
+      await sleep(EXPLOSION_DURATION);
+
+      // Explosion finished
+      
       await newExplosion.remove();
       const updateAfterExplosion = await Game.findOneById(gameId);
-      
+
       io.emit('action', {
         type: 'UPDATE_GAME',
         payload: updateAfterExplosion
       });
 
-      // }, EXPLOSION_DURATION);
-    }, BOMB_FUSE); 
+    }, BOMB_FUSE);
 
     return newBomb;
   }
 
+
+
+  @Authorized()
+  @Post('/games/:id([0-9]+)/flames')
+  async fireFlames(
+    @Param('id') gameId: number,
+    @Body() { position, facing }: any
+  ) {
+    let game = await Game.findOneById(gameId);
+    if (!game) throw new NotFoundError(`Game does not exist`);
+
+    let newPosition = calculateFlamePos(position, game, facing)
+
+    if (!newPosition) return null
+
+    const newFlame: Flame = await Flame.create({
+      game,
+      position: newPosition
+    }).save();
+
+    io.emit('action', {
+      type: 'UPDATE_GAME',
+      payload: {
+        ...game,
+        activeFlames: [
+          ...game.activeFlames,
+          newFlame
+        ]
+      }
+    });
+
+    setTimeout(async () => {
+      while (calculateFlamePos(newFlame.position, game, facing) && !hitByFlame(newPosition, game)) {
+        game = await Game.findOneById(gameId);
+        newPosition = calculateFlamePos(newFlame.position, game, facing)
+
+        newFlame.position = newPosition
+        await newFlame.save()
+        game = await Game.findOneById(gameId);
+        io.emit('action', {
+          type: 'UPDATE_GAME',
+          payload: game
+
+        });
+        await sleep(FLAME_FUSE);
+      }
+
+
+      const gameAfterHitPlayers = await checkForDeadPlayers(game!, gameId);
+      if (gameAfterHitPlayers) {
+        game = gameAfterHitPlayers;
+        io.emit('action', {
+          type: 'UPDATE_GAME',
+          payload: game
+        })
+      }
+
+      await newFlame.remove();
+
+      game = await Game.findOneById(gameId) as Game;
+
+      io.emit('action', {
+        type: 'UPDATE_GAME',
+        payload: game
+      });
+    }, FLAME_LAUNCH_FUSE)
+    return newFlame;
+  }
 
   @Authorized()
   @Get('/games/:id([0-9]+)')
@@ -305,17 +436,18 @@ export default class GameController {
   }
 }
 
-async function checkForDeadPlayers(game: Game, gameId: number): Promise<Game|null> {
+async function checkForDeadPlayers(game: Game, gameId: number): Promise<Game | null> {
   const deadPlayers = playersAreDead(game);
-  let gameCopy: Game|null = null;
+  let gameCopy: Game = game;
   if (deadPlayers) {
     deadPlayers.forEach(async player => {
       player.dead = true;
       /// heb dit zomaar veranderd... kijken of werkt ofzo
-      gameCopy = game;
-      gameCopy.players = game.players.map(pl => pl === player ? player : pl);
+      gameCopy.players = gameCopy.players.map(pl => JSON.stringify(pl) === JSON.stringify(player) ? player : pl);
       await player.save();
     });
+
+    await gameCopy.save();
 
     const winner = calculateWinner(game);
     if (winner) {
@@ -323,7 +455,15 @@ async function checkForDeadPlayers(game: Game, gameId: number): Promise<Game|nul
       finishedGame.winner = winner.symbol;
       finishedGame.status = 'finished';
       await finishedGame.save();
+      return finishedGame;
     }
+    else if (winner === false) {
+      let finishedGame = await Game.findOneById(gameId) as Game;
+      finishedGame.status = 'finished';
+      await finishedGame.save();
+      return finishedGame;
+    }
+    else return gameCopy;
   }
-  return gameCopy;
+  else return null;
 }

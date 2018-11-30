@@ -1,7 +1,7 @@
 import React, {PureComponent} from 'react';
 import {connect} from 'react-redux';
 import {Redirect} from 'react-router-dom';
-import {getGames, joinGame, startGame, updateGame, placeBomb, updateCurrentPlayerPosition} from '../../actions/games';
+import {getGames, joinGame, startGame, updateGame, placeBomb, fireFlame, updateCurrentPlayerPosition} from '../../actions/games';
 import {getUsers} from '../../actions/users';
 import Paper from 'material-ui/Paper';
 import Board from './Board';
@@ -41,8 +41,15 @@ class GameDetails extends PureComponent {
     }
     if (key === 'z') {
       console.log('Place bomb');
-      this.props.placeBomb(game.id, currentPlayer.position); 
+      console.log(currentPlayer.activeBombs, currentPlayer.stats.bombs);
+      if (!(currentPlayer.activeBombs >= currentPlayer.stats.bombs)) {
+        this.props.placeBomb(game.id, currentPlayer.position, currentPlayer.id);
+      }
     }
+    if (key === 'x') {
+      console.log('fire flame');
+      this.props.fireFlame(game.id, currentPlayer.position, this.props.currentPlayer.facing); 
+  }
   }
 
   render() {
@@ -110,7 +117,7 @@ const mapStateToProps = (state, props) => ({
 });
 
 const mapDispatchToProps = {
-  getGames, getUsers, startGame, joinGame, updateGame, updateCurrentPlayerPosition, placeBomb
+  getGames, getUsers, startGame, joinGame, updateGame, updateCurrentPlayerPosition, placeBomb, fireFlame
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(GameDetails);
@@ -127,6 +134,11 @@ function formatBoard(game) {
           if ((kv[0] === '-' && explosionRef['-'].includes(initialCell)) || (kv[0] === '|' && explosionRef['|'].includes(initialCell))) {
             formattedBoard[ex[0]][ex[1]] = '+';
           }
+          else if (initialCell === '+') formattedBoard[ex[0]][ex[1]] = '+';
+          else if ((kv[0] === '>' || kv[0] === '<') && explosionRef[kv[0]].includes(initialCell)) formattedBoard[ex[0]][ex[1]] = '-';
+          else if ((kv[0] === '^' || kv[0] === 'v') && explosionRef[kv[0]].includes(initialCell)) formattedBoard[ex[0]][ex[1]] = '|';
+          else if ((kv[0] === '>' || kv[0] === '<') && explosionRef2[kv[0]].includes(initialCell)) formattedBoard[ex[0]][ex[1]] = '+';
+          else if ((kv[0] === '^' || kv[0] === 'v') && explosionRef2[kv[0]].includes(initialCell)) formattedBoard[ex[0]][ex[1]] = '+';
           else formattedBoard[ex[0]][ex[1]] = kv[0];
         });
       });
@@ -135,6 +147,9 @@ function formatBoard(game) {
   if (game.activeBombs[0]) {
     game.activeBombs.forEach(bomb => formattedBoard[bomb.position[0]][bomb.position[1]] = '💣');
   }
+  if (game.activeFlames[0]) {
+    game.activeFlames.forEach(flame => formattedBoard[flame.position[0]][flame.position[1]] = '@');
+  }
   game.players.forEach(player => {if(!player.dead) formattedBoard[player.position[0]][player.position[1]] = player.symbol + player.facing});
   return formattedBoard;
 }
@@ -142,4 +157,15 @@ function formatBoard(game) {
 const explosionRef = {
   '-': ['|', '^', 'v'],
   '|': ['-', '>', '<'],
+  '>': ['-', '<'],
+  '<': ['-', '>'],
+  '^': ['|', 'v'],
+  'v': ['|', '^']
 };
+
+const explosionRef2 = {
+  '>': ['^', 'v'],
+  '<': ['^', 'v'],
+  '^': ['>', '<'],
+  'v': ['>', '<']
+}

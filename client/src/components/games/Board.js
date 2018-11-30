@@ -13,18 +13,19 @@ const gifler = require('gifler');
 // })
 
 const reference = [
-  '-', '|', '+', '<', '>', '^', 'v',
+  '-', '|', '+', '<', '>', '^', 'v', '@',
   '▩', '□', '▣', '▤', '💣',
   'x>', 'x<', 'x^', 'xv',
   'o>', 'o<', 'o^', 'ov',
   '☆>', '☆<', '☆^', '☆v',
   'ᗣ>', 'ᗣ<', 'ᗣ^', 'ᗣv',
+  'db^', 'dbv', 'df^', 'dfv'
 ];
 
 const animations = {
   idle:   ['💣'],
   add:    ['-', '|', '+', '<', '>', '^', 'v'],
-  remove: ['□'], /// en bom?
+  remove: ['□', 'db^', 'dbv', 'df^', 'dfv'], /// en bom?
 }
 
 class Board extends Component {
@@ -102,19 +103,17 @@ class Board extends Component {
       diffs.forEach(diff => {
         switch (diff.type) {
           case 'remove':
-            // console.log(diff.symbol);
             if (animations.remove.includes(diff.symbol)) {
-              newRemoveAnimations[diff.pos[0]][diff.pos[1]] = <Animation key={`${diff.pos[1] * 50}-${diff.pos[0] * 50}-${diff.symbol}`} src={require(`../../images/${diff.symbol}_r.gif`)} x={diff.pos[1] * 50} y={diff.pos[0] * 50} frameRate={13} type={'remove'} frames={3} />
+              newRemoveAnimations[diff.pos[0]][diff.pos[1]] = <Animation key={`${diff.pos[1] * 50}-${diff.pos[0] * 50}-${diff.symbol}`} src={require(`../../images/${diff.symbol}_r.gif`)} x={diff.pos[1] * 50} y={diff.pos[0] * 50} frameRate={13} type={'remove'} frames={5} />
             }
             setTimeout(() => {
               let newerRemoveAnimations = this.state.removeAnimations;
               newerRemoveAnimations[diff.pos[0]][diff.pos[1]] = null;
               this.setState({removeAnimations: newerRemoveAnimations});
-            }, 1000 / 13 * 3);
+            }, 1000 / 13 * 5);
             newBoard[diff.pos[0]][diff.pos[1]] = null;
             break;
           case 'add':
-            // console.log(diff.symbol);
             newBoard[diff.pos[0]][diff.pos[1]] = this.renderNewImg(diff.symbol, diff.pos[1] * 50, diff.pos[0] * 50);
             break;
           default:
@@ -143,13 +142,10 @@ class Board extends Component {
   render() {
     // const testImg = new window.Image();
     // testImg.src = require('../../images/💣_i.gif')
-
-    console.log(this.state.removeAnimations);
-
     return ( <div>
       {!this.props.dead && !this.props.finished && 
         <KeyboardEventHandler 
-          handleKeys={['right', 'down', 'left', 'up', 'z']} 
+          handleKeys={['right', 'down', 'left', 'up', 'z', 'x']} 
           onKeyEvent={(key, e) => {
             e.preventDefault();
             this.props.arrowMove(key);
@@ -214,11 +210,12 @@ class Animation extends Component {
       }});
     
     this.state.image.src = this.props.src;
-    this.state.image.onload = () => this.spriteNode.start();
+    this.spriteNode.start();
+    // this.state.image.onload = () => this.spriteNode.start();
     if (this.props.type === 'remove') {
       setTimeout(() => {
-        this.spriteNode.stop();
-      }, 1000 / this.props.frameRate * this.props.frames);
+        if (this.spriteNode) this.spriteNode.stop();
+      }, 1000 / this.props.frameRate * (this.props.frames-1));
     }
   }
 

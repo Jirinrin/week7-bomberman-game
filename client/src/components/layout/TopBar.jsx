@@ -7,15 +7,23 @@ import {withRouter} from 'react-router'
 import {userId} from '../../jwt'
 import {connect} from 'react-redux'
 import AccountIcon from 'material-ui-icons/AccountBox'
+import purple from '@material-ui/core/colors/purple';
+import red from '@material-ui/core/colors/red';
+
+const test = red; 
+
+
+
+
 
 const TopBar = (props) => {
   const { location, history, user } = props
 
   return (
-    <AppBar position="absolute" style={{zIndex:10}}>
+    <AppBar position="absolute" color='inheret' style={{zIndex:10}}>
       <Toolbar>
-        <Typography variant="title" color="inherit" style={{flex: 1}}>
-          Multiplayer Tic Tac Toe
+        <Typography variant="title" color='inheret' style={{flex: 1}}>
+          BomberMan
         </Typography>
         {
           user &&

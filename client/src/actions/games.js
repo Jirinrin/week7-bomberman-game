@@ -10,6 +10,7 @@ export const JOIN_GAME_SUCCESS = 'JOIN_GAME_SUCCESS';
 export const UPDATE_GAME_SUCCESS = 'UPDATE_GAME_SUCCESS';
 export const START_GAME_SUCCESS = 'START_GAME_SUCCESS';
 export const PLACE_BOMB_SUCCESS = 'PLACE_BOMB_SUCCESS';
+export const FIRE_FLAME_SUCCESS = 'FIRE_FLAME_SUCCESS';
 
 const updateGames = games => ({
   type: UPDATE_GAMES,
@@ -37,6 +38,9 @@ const placeBombSuccess = () => ({
   type: PLACE_BOMB_SUCCESS
 });
 
+const fireFlameSuccess = () => ({
+  type: FIRE_FLAME_SUCCESS
+});
 
 
 
@@ -121,17 +125,30 @@ export const updateCurrentPlayerPosition = (gameId, position, facing) => (dispat
     .catch(err => console.error(err));    
 }
 
-export const placeBomb = (gameId, position) => (dispatch, getState) => {
-  const state = getState()
-  const jwt = state.currentUser.jwt
+export const placeBomb = (gameId, position, playerId) => (dispatch, getState) => {
+  const state = getState();
+  const jwt = state.currentUser.jwt;
 
-  if (isExpired(jwt)) return dispatch(logout())
+  if (isExpired(jwt)) return dispatch(logout());
 
   request
     .post(`${baseUrl}/games/${gameId}/bombs`)
     .set('Authorization', `Bearer ${jwt}`)
-    // .then(console.log('verzonden'))
-    .send({ position })
+    .send({ position, playerId })
     .then(_ => dispatch(placeBombSuccess()))
-    .catch(err => console.error(err))
+    .catch(err => console.error(err));
+}
+
+export const fireFlame = (gameId, position, facing) => (dispatch, getState) => {
+  const state = getState();
+  const jwt = state.currentUser.jwt;
+
+  if (isExpired(jwt)) return dispatch(logout());
+
+  request
+    .post(`${baseUrl}/games/${gameId}/flames`)
+    .set('Authorization', `Bearer ${jwt}`)
+    .send({ position, facing })
+    .then(_ => dispatch(fireFlameSuccess()))
+    .catch(err => console.error(err));    
 }
