@@ -24,14 +24,15 @@ const reference = [
 const animations = {
   idle:   ['💣'],
   add:    ['-', '|', '+', '<', '>', '^', 'v'],
-  remove: ['-', '|', '+', '<', '>', '^', 'v', '□'], /// en bom?
+  remove: ['□'], /// en bom?
 }
 
 class Board extends Component {
   state = {
     images: {},
     board: [[]],
-    backgroundImage: null
+    backgroundImage: null,
+    removeAnimations: [[]]
   }
 
   async componentDidMount() {
@@ -57,7 +58,8 @@ class Board extends Component {
           if (!this.state.images[cell]) return null;
           return this.renderNewImg(cell, j * 50, i * 50);
         });
-      })
+      }),
+      removeAnimations: Array(17).fill(Array(19).fill(null))
     });
   }
 
@@ -81,8 +83,8 @@ class Board extends Component {
           if (cell === nextProps.board[i][j]) return null;
           if (cell === null && nextProps.board[i][j] !== null) return [{type: 'add', symbol: nextProps.board[i][j], pos: [i, j]}];
           if (cell !== null) {
-            if (nextProps.board[i][j] === null) return [{type: 'remove', pos: [i, j]}];
-            else return [ {type: 'remove', pos: [i, j]},
+            if (nextProps.board[i][j] === null) return [{type: 'remove', symbol: this.props.board[i][j], pos: [i, j]}];
+            else return [ {type: 'remove', symbol: this.props.board[i][j], pos: [i, j]},
                           {type: 'add', symbol: nextProps.board[i][j], pos: [i, j]} ]
           }
           return null;
@@ -93,16 +95,26 @@ class Board extends Component {
       .flat(2)
       .sort((a, b) => a.type < b.type);
 
-      console.log(diffs);
-
       let newBoard = this.state.board;
-      
+      let newRemoveAnimations = this.state.removeAnimations;
+      let updateRemoveAnimations = false;
+
       diffs.forEach(diff => {
         switch (diff.type) {
           case 'remove':
+            // console.log(diff.symbol);
+            if (animations.remove.includes(diff.symbol)) {
+              newRemoveAnimations[diff.pos[0]][diff.pos[1]] = <Animation key={`${diff.pos[1] * 50}-${diff.pos[0] * 50}-${diff.symbol}`} src={require(`../../images/${diff.symbol}_r.gif`)} x={diff.pos[1] * 50} y={diff.pos[0] * 50} frameRate={13} type={'remove'} frames={3} />
+            }
+            setTimeout(() => {
+              let newerRemoveAnimations = this.state.removeAnimations;
+              newerRemoveAnimations[diff.pos[0]][diff.pos[1]] = null;
+              this.setState({removeAnimations: newerRemoveAnimations});
+            }, 1000 / 13 * 3);
             newBoard[diff.pos[0]][diff.pos[1]] = null;
             break;
           case 'add':
+            // console.log(diff.symbol);
             newBoard[diff.pos[0]][diff.pos[1]] = this.renderNewImg(diff.symbol, diff.pos[1] * 50, diff.pos[0] * 50);
             break;
           default:
@@ -111,6 +123,9 @@ class Board extends Component {
       });
 
       this.setState({board: newBoard});
+      if (updateRemoveAnimations) {
+        this.setState({removeAnimations: newRemoveAnimations});
+      }
     }
   }
 
@@ -126,8 +141,10 @@ class Board extends Component {
   }
 
   render() {
-    const testImg = new window.Image();
-    testImg.src = require('../../images/💣_i.gif')
+    // const testImg = new window.Image();
+    // testImg.src = require('../../images/💣_i.gif')
+
+    console.log(this.state.removeAnimations);
 
     return ( <div>
       {!this.props.dead && !this.props.finished && 
@@ -142,13 +159,17 @@ class Board extends Component {
   
   
       <Stage width={950} height={850}>
-        
+
         <Layer>
           <Image x={0} y={0} width={950} height={850} image={this.state.backgroundImage || null} space={'fill'} />          
         </Layer>
 
         <Layer>
           {this.state.board}
+        </Layer>
+
+        <Layer ref={ref => this.animationLayer = ref}>
+          {this.state.removeAnimations}
         </Layer>
 
       </Stage>
@@ -194,6 +215,11 @@ class Animation extends Component {
     
     this.state.image.src = this.props.src;
     this.state.image.onload = () => this.spriteNode.start();
+    if (this.props.type === 'remove') {
+      setTimeout(() => {
+        this.spriteNode.stop();
+      }, 1000 / this.props.frameRate * this.props.frames);
+    }
   }
 
   componentWillUnmount() {
@@ -202,7 +228,7 @@ class Animation extends Component {
 
   render() {
     return (
-      <Sprite 
+      <Sprite
         key={`${this.props.x}-${this.props.y}`} x={this.props.x} y={this.props.y} scale={{x: 0.5208, y: 0.5208}} image={this.state.image} space={'fill'}
         animation={this.state.currentAnimation} animations={this.state.animations}
         frameRate={this.props.frameRate} frameIndex={0}
