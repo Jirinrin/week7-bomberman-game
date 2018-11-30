@@ -15,10 +15,10 @@ const FLAME_FUSE = 100;
 const EXPLOSION_DURATION = 1500;
 
 const ITEM_CHANCES = {
-  'null': 8,
+  'null': 5,
   'db^': 1,
   'dbv': 1,
-  'df^': 1,
+  'df^': 2,
   'dfv': 1
 };
 const totalChance = Object.values(ITEM_CHANCES).reduce((acc, curr) => acc + curr);
@@ -99,7 +99,7 @@ export default class GameController {
     switch (game.players.length) {
       case 1:
         player.symbol = 'o';
-        player.position = [1, 6];
+        player.position = [15, 17];
         break;
       case 2:
         player.symbol = '☆';
