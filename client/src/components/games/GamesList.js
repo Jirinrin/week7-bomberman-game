@@ -63,6 +63,7 @@ class GamesList extends PureComponent {
         variant="raised"
         onClick={createGame}
         className="create-game"
+        style={{ backgroundColor: '#121212'}}
       >
         Create Game
       </Button>

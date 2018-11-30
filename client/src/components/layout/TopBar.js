@@ -8,36 +8,37 @@ import {userId} from '../../jwt'
 import {connect} from 'react-redux'
 import AccountIcon from 'material-ui-icons/AccountBox'
 
+
 const TopBar = (props) => {
   const { location, history, user } = props
 
  
   return (
-    <AppBar position="absolute"  style={{zIndex:10}}>
+    <AppBar position="absolute"  style={{zIndex:10, backgroundColor: '#121212'}}>
       <Toolbar>
         <Typography variant="title" color="inherit" style={{flex: 1}}>
           BomberMan 
         </Typography>
         {
           user &&
-          <Button color="inherit"><AccountIcon /> { user.firstName }</Button>
+          <Button color="inherit" style={{backgroundColor: '#121212'}}><AccountIcon /> { user.firstName }</Button>
         }
 
         {
           location.pathname.indexOf('signup') > 0 &&
-          <Button color="inherit" onClick={() => history.push('/login')}>Login</Button>
+          <Button color="inherit"  style={{backgroundColor: '#121212'}} onClick={() => history.push('/login')}>Login</Button>
         }
         {
           location.pathname.indexOf('login') > 0 &&
-          <Button color="inherit" onClick={() => history.push('/signup')}>Sign up</Button>
+          <Button color="inherit" style={{backgroundColor: '#121212'}} onClick={() => history.push('/signup')}>Sign up</Button>
         }
         {
           location.pathname.indexOf('games/') > 0 &&
-          <Button color="inherit" onClick={() => history.push('/games')}>All Games</Button>
+          <Button color="inherit" style={{backgroundColor: '#121212'}} onClick={() => history.push('/games')}>All Games</Button>
         }
         {
           /games$/.test(location.pathname) &&
-          <Button color="inherit" onClick={() => history.push('/logout')}>Log out</Button>
+          <Button color="inherit" style={{backgroundColor: '#121212'}} onClick={() => history.push('/logout')}>Log out</Button>
         }
       </Toolbar>
     </AppBar>

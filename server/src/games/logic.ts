@@ -126,6 +126,10 @@ export const playersAreDead = (game: Game): Player[] | null => {
   return deadPlayers[0] ? deadPlayers : null;
 }
 
+
+
+
+
 export const calculateWinner = (game: Game): Player | null | false => {
   const alivePlayers = game.players.filter(player => !player.dead);
   if (alivePlayers.length === 1) return alivePlayers[0];
@@ -166,8 +170,14 @@ export const hitByFlame = (flamePosition, game) => {
     const hitPlayer = game.players.find(player => JSON.stringify(player.position) === JSON.stringify(flamePosition))
     return hitPlayer
   }
+  if (game.activeBombs.find(bomb => JSON.stringify(bomb.position) === JSON.stringify(flamePosition))) {
+    const bombPosition = game.activeBombs.find(bomb => JSON.stringify(bomb.position) === JSON.stringify(flamePosition))
+    return bombPosition
+  }
   return false
 }
+
+
 
 
 

@@ -92,14 +92,14 @@ class GameDetails extends PureComponent {
 
       {
         winner &&
-        <p>Winner: {users[winner].firstName}</p>
+        <h1>Winner: {users[winner].firstName}</h1>
       }
 
       <hr />
 
       {
         game.status !== 'pending' && <div> <h3> Players alive: {game.players.filter(player => player.dead === false).length} </h3>
-        <Board board={formattedBoard} arrowMove={this.arrowMove} dead={currentPlayer ? currentPlayer.dead : null} finished={game.status === 'finished'}/>
+        <Board board={formattedBoard} arrowMove={this.arrowMove} currentuserid={userId} game={game} dead={currentPlayer ? currentPlayer.dead : null} finished={game.status === 'finished'}/>
         </div>
       }
     </Paper>)

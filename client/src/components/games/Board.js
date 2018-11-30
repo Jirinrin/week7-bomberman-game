@@ -142,8 +142,10 @@ class Board extends Component {
   render() {
     // const testImg = new window.Image();
     // testImg.src = require('../../images/💣_i.gif')
+    console.log(this.props.game.players)
+    console.log(this.props.currentuserid)
     return ( <div>
-      {!this.props.dead && !this.props.finished && 
+      {!this.props.dead && !this.props.finished && this.props.game.players.some(player => player.userId === this.props.currentuserid) &&
         <KeyboardEventHandler 
           handleKeys={['right', 'down', 'left', 'up', 'z', 'x']} 
           onKeyEvent={(key, e) => {
