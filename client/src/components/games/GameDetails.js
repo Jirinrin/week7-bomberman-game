@@ -61,7 +61,6 @@ class GameDetails extends PureComponent {
       .filter(p => p.symbol === game.winner)
       .map(p => p.userId)[0];
 
-      console.log(users)
     return (<Paper className="outer-paper">
       <h1>Game #{game.id}</h1>
 
@@ -122,7 +121,6 @@ function formatBoard(game) {
   
   if (game.activeExplosions[0]) {
     game.activeExplosions.forEach(explosion => {
-      console.log(explosion);
       Object.entries(explosion.position).forEach(kv => {
         kv[1].forEach(ex => {
           const initialCell = formattedBoard[ex[0]][ex[1]]
