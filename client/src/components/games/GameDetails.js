@@ -24,30 +24,23 @@ class GameDetails extends PureComponent {
   arrowMove = (key) => {
     const {currentPlayer, game} = this.props;
     if (key === 'right') {
-      console.log('move to right');
       this.props.updateCurrentPlayerPosition(game.id, [currentPlayer.position[0], currentPlayer.position[1] + 1 ], '>'); 
     }
     if (key === 'left') {
-      console.log('move to left');
       this.props.updateCurrentPlayerPosition(game.id, [currentPlayer.position[0], currentPlayer.position[1] - 1 ], '<'); 
     }
     if (key === 'up') {
-      console.log('move up');
       this.props.updateCurrentPlayerPosition(game.id, [currentPlayer.position[0]- 1, currentPlayer.position[1]], '^'); 
     }
     if (key === 'down') {
-      console.log('move down');
       this.props.updateCurrentPlayerPosition(game.id, [currentPlayer.position[0] + 1, currentPlayer.position[1]], 'v'); 
     }
     if (key === 'z') {
-      console.log('Place bomb');
-      console.log(currentPlayer.activeBombs, currentPlayer.stats.bombs);
       if (!(currentPlayer.activeBombs >= currentPlayer.stats.bombs)) {
         this.props.placeBomb(game.id, currentPlayer.position, currentPlayer.id);
       }
     }
     if (key === 'x') {
-      console.log('fire flame');
       this.props.fireFlame(game.id, currentPlayer.position, this.props.currentPlayer.facing); 
   }
   }
@@ -61,8 +54,6 @@ class GameDetails extends PureComponent {
 
     if (game === null || users === null) return 'Loading...';
     if (!game) return 'Not found';
-
-    // const player = game.players.find(p => p.userId === userId);
 
     const winner = game.players
       .filter(p => p.symbol === game.winner)

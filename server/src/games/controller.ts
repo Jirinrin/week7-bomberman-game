@@ -5,7 +5,6 @@ import {
 import User from '../users/entity';
 import { Game, Player, Board, Bomb, Explosion, Flame, PowerupSymbol } from './entities';
 import { isValidMove, calculateExplosion, playersAreDead, calculateWinner, hitByFlame, calculateFlamePos } from './logic';
-// import { Validate } from 'class-validator';
 import { io } from '../index';
 import { getBoard } from './boards';
 
@@ -30,13 +29,7 @@ const ITEM_DROP_MAP: { [num: number]: PowerupSymbol } = Object.keys(ITEM_CHANCES
   return newAcc;
 }, {});
 
-// console.log(ITEM_DROP_MAP);
-
 class GameUpdate {
-
-  // @Validate(IsBoard, {
-  //   message: 'Not a valid board'
-  // })
   board: Board;
 }
 
@@ -55,7 +48,6 @@ export default class GameController {
   async createGame(
     @CurrentUser() user: User
   ) {
-    /// moet nog testen
     const entity = await Game.create({
       board: getBoard()
     }).save();
@@ -87,7 +79,6 @@ export default class GameController {
   ) {
     const game = await Game.findOneById(gameId);
     if (!game) throw new BadRequestError(`Game does not exist`);
-    /// moet dus (uiteindelijk) een aparte start game knop komen; dat game.status = 'started' moet dus niet direct gebeuren!
     if (game.status !== 'pending') throw new BadRequestError(`Game is already started`);
 
 
@@ -117,7 +108,6 @@ export default class GameController {
 
     await player.save();
 
-    /// Kan wss nog zonder findOnebyId
     io.emit('action', {
       type: 'UPDATE_GAME',
       payload: await Game.findOneById(gameId)
@@ -141,7 +131,6 @@ export default class GameController {
     game.status = 'started';
     await game.save();
 
-    /// Kan wss nog zonder findOnebyId
     io.emit('action', {
       type: 'UPDATE_GAME',
       payload: await Game.findOneById(gameId)
@@ -151,9 +140,10 @@ export default class GameController {
   }
 
   @Authorized()
-  // the reason that we're using patch here is because this request is not idempotent
+  // Comment not added by us:
+  // "the reason that we're using patch here is because this request is not idempotent
   // http://restcookbook.com/HTTP%20Methods/idempotency/
-  // try to fire the same requests twice, see what happens
+  // try to fire the same requests twice, see what happens"
   @Patch('/games/:id([0-9]+)')
   async updateGame(
     @CurrentUser() user: User,
@@ -168,14 +158,6 @@ export default class GameController {
     if (!player) throw new ForbiddenError(`You are not part of this game`);
     if (game.status !== 'started') throw new BadRequestError(`The game is not started yet`);
 
-    // const winner = calculateWinner(update.board);
-    // if (winner) {
-    //   game.winner = winner;
-    //   game.status = 'finished';
-    // }
-    // else if (finished(update.board)) {
-    //   game.status = 'finished';
-    // }
     game.board = update.board;
     await game.save();
 
@@ -189,8 +171,6 @@ export default class GameController {
 
   @Authorized()
   // the reason that we're using patch here is because this request is not idempotent
-  // http://restcookbook.com/HTTP%20Methods/idempotency/
-  // try to fire the same requests twice, see what happens
   @Patch('/games/:id([0-9]+)/players')
   async updatePlayer(
     @CurrentUser() user: User,
@@ -234,9 +214,6 @@ export default class GameController {
     const updateId: number = player.id || 0;
     const newPlayers = game.players.map((pl) => pl.id === updateId ? player : pl);
 
-    /// misschien weg
-    // await game.save();
-
     let gameAfterPositionUpdate: Game = { ...game, players: newPlayers } as Game;
 
     const gameAfterDeadPlayers = await checkForDeadPlayers(gameAfterPositionUpdate, gameId);
@@ -264,8 +241,6 @@ export default class GameController {
     player.activeBombs = player.activeBombs + 1;
     await player.save();
 
-    console.log('active bombs: ' + player.activeBombs);
-
     // Place bomb
 
     const newBomb: Bomb = await Bomb.create({
@@ -289,8 +264,7 @@ export default class GameController {
 
     setTimeout(async () => {
       let updatedPlayer = await Player.findOneById(playerId) as Player;
-      console.log('now active bombs:' + updatedPlayer.activeBombs);
-      updatedPlayer.activeBombs = updatedPlayer.activeBombs - 1; /// hier gaat soms iets fout ofzo
+      updatedPlayer.activeBombs = updatedPlayer.activeBombs - 1;
       await updatedPlayer.save();
 
       await newBomb.remove();
@@ -301,8 +275,6 @@ export default class GameController {
         position: calculateExplosion(position, updateAfterBomb!, updatedPlayer.stats.power)
       }).save();
 
-      // let gameDuringExplosion: Game = updateAfterBomb!;
-      // gameDuringExplosion.activeExplosions = [ ...game.activeExplosions, newExplosion ];
       let gameDuringExplosion: Game = await Game.findOneById(gameId) as Game;
 
       const gameAfterDeadPlayers = await checkForDeadPlayers(gameDuringExplosion, gameId);
@@ -442,7 +414,6 @@ async function checkForDeadPlayers(game: Game, gameId: number): Promise<Game | n
   if (deadPlayers) {
     deadPlayers.forEach(async player => {
       player.dead = true;
-      /// heb dit zomaar veranderd... kijken of werkt ofzo
       gameCopy.players = gameCopy.players.map(pl => JSON.stringify(pl) === JSON.stringify(player) ? player : pl);
       await player.save();
     });

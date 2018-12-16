@@ -1,16 +1,8 @@
 import React, { Component } from 'react';
 import './Board.css';
 import KeyboardEventHandler from 'react-keyboard-event-handler';
-import { Stage, Image, Sprite, Layer, Rect} from 'react-konva';
-import Konva, { Canvas } from 'konva';
+import { Stage, Image, Sprite, Layer} from 'react-konva';
 import bg from '../../images/bg.png';
-const gifler = require('gifler');
-
-// this.props.board.map((row, i) => {
-//   return row.map((cell, j) => {
-//     <Image x={j*50} y={i*50} width={50} height={50} src={reference[cell]} />
-//   })
-// })
 
 const reference = [
   '-', '|', '+', '<', '>', '^', 'v', '@',
@@ -25,7 +17,7 @@ const reference = [
 const animations = {
   idle:   ['💣', 'x>', 'x<', 'x^', 'xv'],
   add:    ['-', '|', '+', '<', '>', '^', 'v'],
-  remove: ['□', 'db^', 'dbv', 'df^', 'dfv'], /// en bom?
+  remove: ['□', 'db^', 'dbv', 'df^', 'dfv']
 }
 
 class Board extends Component {
@@ -79,7 +71,6 @@ class Board extends Component {
   }
 
   componentWillUpdate(nextProps) {
-    let force = null;
     if (JSON.stringify(nextProps.board) !== JSON.stringify(this.props.board)) {
       const diffs = this.props.board.map((row, i) => {
         return row.map((cell, j) => {
@@ -142,10 +133,6 @@ class Board extends Component {
   }
 
   render() {
-    // const testImg = new window.Image();
-    // testImg.src = require('../../images/💣_i.gif')
-    console.log(this.props.game.players)
-    console.log(this.props.currentuserid)
     return ( <div>
       {!this.props.dead && !this.props.finished && this.props.game.players.some(player => player.userId === this.props.currentuserid) &&
         <KeyboardEventHandler 
@@ -174,30 +161,19 @@ class Board extends Component {
 
       </Stage>
 
+      <br/><br/><br/><br/>
+
       {this.props.board.map((cells, rowIndex) => 
         <div key={rowIndex}>
           {cells.map((symbol, cellIndex) => this.renderCel(rowIndex, cellIndex, symbol, false))} 
         </div>
       )}
-
-      {/* <div>
-        <Stage width={950} height={850}>
-          <Layer>
-            <Sprite x={0} y={0} width={50} height={50} image={testImg} space={'fill'}
-                    animation={'idle'} animations={{idle: [0,0,96,96, 96,0,96,96]}}
-                    frameRate={7} frameIndex={0} />
-            <Animation x={100} y={100} width={50} height={50} src={require('../../images/💣_i.gif')} frameRate={13} />
-          </Layer>
-        </Stage>
-      </div> */}
     </div> );
   }
 }
 
 export default Board;
 
-
-/// moet nog geexternaliseerd worden
 
 class Animation extends Component {
   state = {
@@ -212,10 +188,9 @@ class Animation extends Component {
               .map((_, i) => [i*96, 0, 96, 96])
               .flat()
       }});
-    
+    // Not doing this via this.setState() because that breaks something in Konva
     this.state.image.src = this.props.src;
     this.spriteNode.start();
-    // this.state.image.onload = () => this.spriteNode.start();
     if (this.props.type === 'remove') {
       setTimeout(() => {
         if (this.spriteNode) this.spriteNode.stop();

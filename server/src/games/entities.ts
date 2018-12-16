@@ -12,7 +12,7 @@ export type Board = Row[];
 export type Position = [ number, number ];
 export interface ExplosionPos {
   '+': Position[],
-  '-': Position[], /// waarom zitten hier komma's...
+  '-': Position[],
   '|': Position[],
   '>': Position[],
   '<': Position[],
@@ -26,15 +26,8 @@ export interface PlayerStats {
   speed: number;
 }
 export type FlamePos = [number, number];
-// export type Flames
 
 type Status = 'pending' | 'started' | 'finished';
-
-// const BOARD_SIZE = [17, 15];
-
-// const emptyRow: Row = Array(BOARD_SIZE[0]).fill(null);
-// const emptyBoard: Board = Array(BOARD_SIZE[1]).fill(emptyRow);
-
 
 @Entity()
 export class Game extends BaseEntity {
@@ -51,8 +44,6 @@ export class Game extends BaseEntity {
   @Column('text', {default: 'pending'})
   status: Status
 
-  // this is a relation, read more about them here:
-  // http://typeorm.io/#/many-to-one-one-to-many-relations
   @OneToMany(_ => Player, player => player.game, {eager:true})
   players: Player[]
 
@@ -128,8 +119,6 @@ export class Explosion extends BaseEntity {
   @Column('json', {default: [0,0]})
   position: ExplosionPos
 }
-
-
 
 @Entity()
 export class Flame extends BaseEntity {

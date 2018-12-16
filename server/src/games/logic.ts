@@ -1,14 +1,10 @@
-// import { ValidatorConstraint, ValidatorConstraintInterface } from 'class-validator'
 import { Position, Game, ExplosionPos, Player } from './entities'
 
 const DESTRUCTABLE = ['□'];
 const STURDY = ['▩', '▣'];
 const OBSTACLES = [...DESTRUCTABLE, ...STURDY];
-// const EXPLOSION_SIZE = 3;
 
 export const isValidMove = (newPosition: Position, game: Game): boolean => {
-  // console.log(newPosition);
-  // console.log(game.players);
   if ((game.board[newPosition[0]][newPosition[1]] && OBSTACLES.includes(game.board[newPosition[0]][newPosition[1]]!)) ||
       game.activeBombs.find(bomb => JSON.stringify(bomb.position) === JSON.stringify(newPosition)) ||
       game.players.find(player => JSON.stringify(player.position) === JSON.stringify(newPosition) && !player.dead)
@@ -65,7 +61,6 @@ export const calculateExplosion = (startPoint: Position, game: Game, size: numbe
   return newExplosion;
 }
 
-
 export const calculateExpLine = (startPoint: Position, game: Game, step: 1|-1, direction: '|'|'-', size: number): Position[] => {
   const newLine: Position[] = [];
   switch (direction) {
@@ -108,8 +103,6 @@ export const calculateExpLine = (startPoint: Position, game: Game, step: 1|-1, d
   return newLine;
 }
 
-
-
 export const playersAreDead = (game: Game): Player[] | null => { 
   let deadPlayers: Player[] = [];
   for (let player of game.players) {
@@ -126,18 +119,12 @@ export const playersAreDead = (game: Game): Player[] | null => {
   return deadPlayers[0] ? deadPlayers : null;
 }
 
-
-
-
-
 export const calculateWinner = (game: Game): Player | null | false => {
   const alivePlayers = game.players.filter(player => !player.dead);
   if (alivePlayers.length === 1) return alivePlayers[0];
   if (alivePlayers.length === 0) return false
   return null;
 }
-
-
 
 export const calculateFlamePos = (currentPosition, game, facing) => {
   
@@ -176,58 +163,3 @@ export const hitByFlame = (flamePosition, game) => {
   }
   return false
 }
-
-
-
-
-
-// @ValidatorConstraint()
-// export class IsBoard implements ValidatorConstraintInterface {
-
-//   validate(board: Board) {
-//     const symbols = [ 'x', 'o', null ]
-//     return board.length === 3 &&
-//       board.every(row =>
-//         row.length === 3 &&
-//         row.every(symbol => symbols.includes(symbol))
-//       )
-//   }
-// }
-
-// export const isValidTransition = (playerSymbol: Symbol, from: Board, to: Board) => {
-//   const changes = from
-//     .map(
-//       (row, rowIndex) => row.map((symbol, columnIndex) => ({
-//         from: symbol, 
-//         to: to[rowIndex][columnIndex]
-//       }))
-//     )
-//     .reduce((a,b) => a.concat(b))
-//     .filter(change => change.from !== change.to)
-
-//   return changes.length === 1 && 
-//     changes[0].to === playerSymbol && 
-//     changes[0].from === null
-// }
-
-// export const calculateWinner = (board: Board): Symbol | null =>
-//   board
-//     .concat(
-//       // vertical winner
-//       [0, 1, 2].map(n => board.map(row => row[n])) as Row[]
-//     )
-//     .concat(
-//       [
-//         // diagonal winner ltr
-//         [0, 1, 2].map(n => board[n][n]),
-//         // diagonal winner rtl
-//         [0, 1, 2].map(n => board[2-n][n])
-//       ] as Row[]
-//     )
-//     .filter(row => row[0] && row.every(symbol => symbol === row[0]))
-//     .map(row => row[0])[0] || null
-
-// export const finished = (board: Board): boolean =>
-//   board
-//     .reduce((a,b) => a.concat(b) as Row)
-//     .every(symbol => symbol !== null)
