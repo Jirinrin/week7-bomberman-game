@@ -40,10 +40,7 @@ And: you can only have one active bomb at the same time.
 But fret not, as the Bakudan Research Institute has developed a solution *just for you*~!  
 The following powerups can drop from a box when you destroy it (we configured the odds so that powerups are pretty likely to drop, for demo purposes):
 
-<img src="./client/src/images/df^.gif" width="40px"/>
-<img src="./client/src/images/db^.gif" width="40px"/>  
-<img src="./client/src/images/dfv.gif" width="40px"/>  
-<img src="./client/src/images/dbv.gif" width="40px"/>  
+<img src="./client/src/images/df^.gif" width="40px"/><img src="./client/src/images/db^.gif" width="40px"/><img src="./client/src/images/dfv.gif" width="40px"/><img src="./client/src/images/dbv.gif" width="40px"/>  
 
 * ***Happy :P flame***: increases your explosion size by 1
   * Always useful for killing your friends to have explosions that extend to the edges of the screen, though watch out not to kill yourself in the process
