@@ -1,3 +1,5 @@
+# Bomberman
+
 This repo contains a frontend and a backend of a multiplayer game.  
 It was built during a 4 day interval by Jiri Swen and Jorrit Stein as a 'final hackathon' of the Codaisseur Code Academy.  
 
