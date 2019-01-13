@@ -64,3 +64,9 @@ Game assets are ripped by someone called Maneko from the games:
 * ["Bomberman Touch: The Legend of Mystic Bomb"](http://spritedatabase.net/file/15558/Tiles_and_Miscellaneous)  
 
 ... and some of these were photoshopped by our in-house Photoshop expert.
+
+## Demo
+
+![gif-1](/readme-images/bomberman-1.gif)
+![gif-2](/readme-images/bomberman-2.gif)
+![gif-3](/readme-images/bomberman-3.gif)
